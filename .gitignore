@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Env (secrets) — keep the example file tracked
+.env
+.env.*
+!.env.example
+
+# Build output
+dist/
+build/
+
+# Logs
+*.log
+logs/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
