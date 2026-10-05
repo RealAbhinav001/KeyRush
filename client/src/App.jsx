@@ -4,22 +4,27 @@ import { getHealth } from "./api/health";
 
 const FALLBACK_ERROR = "Can't reach the server. Try again.";
 
-export default function App() {
+const App = () => {
   // One state, three possible shapes — impossible combinations can't exist.
   const [health, setHealth] = useState({ status: "loading" });
 
   useEffect(() => {
     const controller = new AbortController();
 
-    getHealth({ signal: controller.signal })
-      .then((data) => setHealth({ status: "ok", data }))
-      .catch((error) => {
+    const loadHealth = async () => {
+      try {
+        const data = await getHealth({ signal: controller.signal });
+        setHealth({ status: "ok", data });
+      } catch (error) {
         if (axios.isCancel(error)) return; // we cancelled it ourselves
         setHealth({
           status: "error",
           message: error.response?.data?.error ?? FALLBACK_ERROR,
         });
-      });
+      }
+    };
+
+    loadHealth();
 
     return () => controller.abort();
   }, []);
@@ -31,4 +36,6 @@ export default function App() {
       {health.status === "ok" && <p>Server: {health.data.status}</p>}
     </main>
   );
-}
+};
+
+export default App;

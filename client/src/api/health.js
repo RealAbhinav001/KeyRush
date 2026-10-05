@@ -1,6 +1,6 @@
 import api from "./axios";
 
-export async function getHealth({ signal } = {}) {
+export const getHealth = async ({ signal } = {}) => {
   const { data } = await api.get("/health", { signal });
   return data;
-}
+};
