@@ -12,4 +12,8 @@ const connectDB = async ()=>{
         console.log("DataBase Connected")
 }
 
+export const isDbConnected = ()=>{
+    return mongoose.connection.readyState === mongoose.ConnectionStates.connected
+}
+
 export default connectDB
