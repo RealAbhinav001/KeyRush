@@ -1,0 +1,26 @@
+{
+  "name": "keyrush",
+  "version": "1.0.0",
+  "private": true,
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "pnpm --parallel -r dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "db:up": "docker compose up -d --wait",
+    "db:down": "docker compose stop"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "12.10.1",
+      "onFail": "download"
+    }
+  },
+  "packageManager": "pnpm@12.10.1",
+  "type": "module"
+}
