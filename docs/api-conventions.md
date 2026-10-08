@@ -200,4 +200,4 @@ These will be added as they're designed. Until then, raise them in the PR that f
 - **Versioning:** `/api/v1` or not
 - **Rate limiting:** limits per route group, `Retry-After` header
 - **Caching:** `Cache-Control` / `ETag` for public reads (leaderboard)
-git add docs
+  git add docs
