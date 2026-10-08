@@ -9,7 +9,9 @@
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
     "db:up": "docker compose up -d --wait",
-    "db:down": "docker compose stop"
+    "db:down": "docker compose stop",
+    "format:check": "prettier --check .",
+    "format": "prettier --write ."
   },
   "keywords": [],
   "author": "",
@@ -22,5 +24,8 @@
     }
   },
   "packageManager": "pnpm@12.10.1",
-  "type": "module"
+  "type": "module",
+  "devDependencies": {
+    "prettier": "3.9.9"
+  }
 }
