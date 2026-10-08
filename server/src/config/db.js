@@ -16,4 +16,8 @@ export const isDbConnected = ()=>{
     return mongoose.connection.readyState === mongoose.ConnectionStates.connected
 }
 
+export const disconnectDB = async ()=>{
+    await mongoose.connection.close()
+}
+
 export default connectDB
