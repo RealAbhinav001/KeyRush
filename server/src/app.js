@@ -1,7 +1,7 @@
 import express from "express";
 import { isDbConnected } from "./config/db.js";
 
-const app = express();
+const   app   =   express()  ;
 
 app.get("/api/health", (_req, res) => {
   if (isDbConnected()) {
