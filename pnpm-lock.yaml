@@ -221,9 +221,6 @@ importers:
       pino:
         specifier: ^10.4.0
         version: 10.4.0
-      pino-pretty:
-        specifier: ^13.2.0
-        version: 13.2.0
       zod:
         specifier: ^4.6.5
         version: 4.6.5
@@ -237,6 +234,9 @@ importers:
       globals:
         specifier: ^17.13.0
         version: 17.13.0
+      pino-pretty:
+        specifier: ^13.2.0
+        version: 13.2.0
 
 packages:
 
