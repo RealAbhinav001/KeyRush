@@ -1,5 +1,7 @@
 import ApiError from "../utils/apiError.js";
 
+const keys = ["body", "params", "query"];
+
 export const validateRequest = (schema) => (req, res, next) => {
   const errorArray = [];
   const validated = {};
@@ -13,30 +15,14 @@ export const validateRequest = (schema) => (req, res, next) => {
     );
   };
 
-  if (schema.body) {
-    const result = schema.body.safeParse(req.body);
-
-    if (result.success === false) {
-      addError(result);
-    } else {
-      validated.body = result.data;
-    }
-  }
-
-  if (schema.params) {
-    const result = schema.params.safeParse(req.params);
-    if (result.success === false) {
-      addError(result);
-    } else {
-      validated.params = result.data;
-    }
-  }
-  if (schema.query) {
-    const result = schema.query.safeParse(req.query);
-    if (result.success === false) {
-      addError(result);
-    } else {
-      validated.query = result.data;
+  for (const key of keys) {
+    if (schema[key]) {
+      const result = schema[key].safeParse(req[key]);
+      if (result.success === false) {
+        addError(result);
+      } else {
+        validated[key] = result.data;
+      }
     }
   }
 
