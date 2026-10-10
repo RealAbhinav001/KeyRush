@@ -4,16 +4,20 @@ export const validateRequest = (schema) => (req, res, next) => {
   const errorArray = [];
   const validated = {};
 
+  const addError = (result) => {
+    errorArray.push(
+      ...result.error.issues.map((issue) => ({
+        field: issue.path.join("."),
+        message: issue.message,
+      })),
+    );
+  };
+
   if (schema.body) {
     const result = schema.body.safeParse(req.body);
 
     if (result.success === false) {
-      errorArray.push(
-        ...result.error.issues.map((issue) => ({
-          field: issue.path.join("."),
-          message: issue.message,
-        })),
-      );
+      addError(result);
     } else {
       validated.body = result.data;
     }
@@ -22,12 +26,7 @@ export const validateRequest = (schema) => (req, res, next) => {
   if (schema.params) {
     const result = schema.params.safeParse(req.params);
     if (result.success === false) {
-      errorArray.push(
-        ...result.error.issues.map((issue) => ({
-          field: issue.path.join("."),
-          message: issue.message,
-        })),
-      );
+      addError(result);
     } else {
       validated.params = result.data;
     }
@@ -35,12 +34,7 @@ export const validateRequest = (schema) => (req, res, next) => {
   if (schema.query) {
     const result = schema.query.safeParse(req.query);
     if (result.success === false) {
-      errorArray.push(
-        ...result.error.issues.map((issue) => ({
-          field: issue.path.join("."),
-          message: issue.message,
-        })),
-      );
+      addError(result);
     } else {
       validated.query = result.data;
     }
