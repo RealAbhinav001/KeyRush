@@ -71,6 +71,7 @@ The server always decides whether a requested transition is allowed (state machi
 | Malformed JSON body                                                     | **400** | `INVALID_JSON`                            |
 | Request fails validation (shape, type, format, limits)                  | **400** | `VALIDATION_ERROR`                        |
 | Invalid ID format in the path                                           | **400** | `INVALID_ID`                              |
+| Request body larger than 10 kB                                          | **413** | `PAYLOAD_TOO_LARGE`                       |
 | Missing, invalid or expired token                                       | **401** | `UNAUTHENTICATED` / `TOKEN_EXPIRED`       |
 | Wrong email or password                                                 | **401** | `INVALID_CREDENTIALS`                     |
 | Authenticated, but not allowed to do this                               | **403** | `FORBIDDEN`                               |
@@ -97,11 +98,13 @@ The server always decides whether a requested transition is allowed (state machi
 | Auth token                 | **Header**    | `Authorization: Bearer <token>`             |
 
 - **Validation runs in middleware, before the controller.** Controllers only ever see validated data.
-- Every endpoint validates **path params, query and body** with a schema (Zod).
+- Every endpoint validates **path params, query and body** with a schema (Zod). A route declares its schemas with `validateRequest({ body, params, query })`; each key is optional.
+- **Controllers read `req.validated.body`, `req.validated.params` and `req.validated.query`**, never `req.body`, `req.params` or `req.query` directly. The raw values are unchecked; `req.validated` holds the parsed result. (Express 5 makes `req.query` read-only, so parsed data cannot be written back onto it.)
+- If validation fails, the controller is not called and the response is `400 VALIDATION_ERROR` (see §7).
 - **Unknown body fields are stripped**, never passed to the database (prevents mass assignment).
 - Strings are normalized where it matters (email: trimmed + lowercased).
 - Query params arrive as strings and are **coerced** by the schema (`?limit=20` → number).
-- JSON bodies are limited to **10 kB**.
+- JSON bodies are limited to **10 kB**. A larger body is rejected with `413 PAYLOAD_TOO_LARGE`; a body that is not valid JSON is rejected with `400 INVALID_JSON`.
 - **Secrets never go in URLs** (tokens, passwords): they end up in logs and browser history.
 
 ## 7. Errors
@@ -123,14 +126,18 @@ Every error response, from any route, has exactly this shape:
 | ----------- | -------- | ---------------------------------------------------------------------------- |
 | `code`      | ✅       | `SCREAMING_SNAKE_CASE`, **stable**: clients branch on it, so never rename it |
 | `message`   | ✅       | Human-readable; may change wording at any time                               |
-| `details`   | Optional | Field-level problems (validation)                                            |
-| `requestId` | Optional | Correlates a response with server logs                                       |
+| `details`   | Optional | Field-level problems (validation). The key is absent when there are none     |
+| `requestId` | Optional | Correlates a response with server logs. Not sent yet; arrives with KR-9      |
+
+**Validation errors report every problem at once.** `details` has one `{ field, message }` entry per problem, across body, params and query together. `field` is a path a client can match to an input: `email`, or `address.city` for nested values.
 
 **A 500 response must never contain:** stack traces, database or driver error messages, file paths, or internal IDs. It returns `INTERNAL_ERROR` with a generic message; the full error is **logged on the server**.
 
 **No user enumeration:** login failures always return `401 INVALID_CREDENTIALS` with `"Invalid email or password"`, whether the email exists or not.
 
-Errors are created by throwing an `AppError` and turned into responses by **one central error-handling middleware**. Controllers never build error JSON by hand.
+Errors are created by throwing an `ApiError(statusCode, message, code, details?)` and turned into responses by **one central error-handling middleware**. Controllers never build error JSON by hand. Express 5 forwards errors thrown or rejected inside `async` handlers to that middleware, so routes need no `try/catch` for this.
+
+**Client mistakes are not server errors.** Only unexpected errors (the 500 path) are logged with `console.error`. Validation failures, malformed JSON, oversized bodies and other `ApiError`s are not.
 
 ## 8. Authentication & authorization
 
@@ -200,4 +207,3 @@ These will be added as they're designed. Until then, raise them in the PR that f
 - **Versioning:** `/api/v1` or not
 - **Rate limiting:** limits per route group, `Retry-After` header
 - **Caching:** `Cache-Control` / `ETag` for public reads (leaderboard)
-  git add docs

@@ -218,6 +218,9 @@ importers:
       mongoose:
         specifier: ^9.11.0
         version: 9.11.0
+      zod:
+        specifier: ^4.6.5
+        version: 4.6.5
     devDependencies:
       '@eslint/js':
         specifier: ^10.0.1
