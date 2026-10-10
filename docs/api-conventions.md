@@ -71,6 +71,7 @@ The server always decides whether a requested transition is allowed (state machi
 | Malformed JSON body                                                     | **400** | `INVALID_JSON`                            |
 | Request fails validation (shape, type, format, limits)                  | **400** | `VALIDATION_ERROR`                        |
 | Invalid ID format in the path                                           | **400** | `INVALID_ID`                              |
+| Request body larger than 10 kB                                          | **413** | `PAYLOAD_TOO_LARGE`                       |
 | Missing, invalid or expired token                                       | **401** | `UNAUTHENTICATED` / `TOKEN_EXPIRED`       |
 | Wrong email or password                                                 | **401** | `INVALID_CREDENTIALS`                     |
 | Authenticated, but not allowed to do this                               | **403** | `FORBIDDEN`                               |

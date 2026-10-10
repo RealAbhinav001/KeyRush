@@ -5,6 +5,8 @@ import ApiError from "./utils/apiError.js";
 
 const app = express();
 
+app.use(express.json({ limit: "10kb" }));
+
 app.get("/api/health", (_req, res) => {
   if (isDbConnected()) {
     res.json({
