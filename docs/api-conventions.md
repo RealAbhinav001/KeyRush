@@ -130,7 +130,7 @@ Every error response, from any route, has exactly this shape:
 
 **No user enumeration:** login failures always return `401 INVALID_CREDENTIALS` with `"Invalid email or password"`, whether the email exists or not.
 
-Errors are created by throwing an `AppError` and turned into responses by **one central error-handling middleware**. Controllers never build error JSON by hand.
+Errors are created by throwing an `ApiError` and turned into responses by **one central error-handling middleware**. Controllers never build error JSON by hand.
 
 ## 8. Authentication & authorization
 
@@ -200,4 +200,3 @@ These will be added as they're designed. Until then, raise them in the PR that f
 - **Versioning:** `/api/v1` or not
 - **Rate limiting:** limits per route group, `Retry-After` header
 - **Caching:** `Cache-Control` / `ETag` for public reads (leaderboard)
-  git add docs
