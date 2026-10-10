@@ -1,15 +1,16 @@
 import app from "./app.js";
 import connectDB, { disconnectDB } from "./config/db.js";
+import logger from "./config/logger.js";
 
 const PORT = process.env.PORT || 4000;
 
 const shutdownDataBase = async () => {
   try {
     await disconnectDB();
-    console.log("Database Disconnected");
+    logger.info("Database Disconnected");
     process.exit(0);
   } catch (error) {
-    console.error("Error During Resource CleanUp: ", error);
+    logger.fatal(error, "Error During Resource CleanUp");
     process.exit(1);
   }
 };
@@ -22,14 +23,14 @@ const startUp = async () => {
     await connectDB();
     server = app.listen(PORT, (error) => {
       if (error) {
-        console.error("Failed to start server:", error);
+        logger.fatal(error, "Failed to start server");
         process.exit(1);
       }
 
-      console.log(`Keyrush server running at http://localhost:${PORT}`);
+      logger.info(`Keyrush server running at http://localhost:${PORT}`);
     });
   } catch (error) {
-    console.error("Failed to start server:", error);
+    logger.fatal(error, "Failed to start server");
     process.exit(1);
   }
 };
@@ -38,15 +39,15 @@ const shutdown = async (signal) => {
   if (isShuttingDown) return;
 
   isShuttingDown = true;
-  console.log(`${signal} received. Starting graceful shutdown...`);
+  logger.info(`${signal} received. Starting graceful shutdown...`);
 
   if (server) {
     server.close((err) => {
       if (err) {
-        console.error("Error During Resource Cleanup: ", err);
+        logger.fatal(err, "Error During Resource Cleanup");
         process.exit(1);
       } else {
-        console.log("HTTP server closed. Active requests finished.");
+        logger.info("HTTP server closed. Active requests finished.");
         shutdownDataBase();
       }
     });
@@ -55,7 +56,7 @@ const shutdown = async (signal) => {
   }
 
   setTimeout(() => {
-    console.error("ShutDown Time Exceed.Forcing Shutdown");
+    logger.fatal("ShutDown Time Exceed.Forcing Shutdown");
     process.exit(1);
   }, 10000);
 };
