@@ -1,6 +1,10 @@
 import pino from "pino";
+import { getRequestId } from "../utils/requestContext.js";
 
 const logger = pino({
+  mixin() {
+    return { requestId: getRequestId() };
+  },
   transport:
     process.env.NODE_ENV === "production"
       ? undefined
