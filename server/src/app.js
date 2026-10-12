@@ -2,8 +2,11 @@ import express from "express";
 import { isDbConnected } from "./config/db.js";
 import errorMiddleware from "./middleware/errorMiddleware.js";
 import ApiError from "./utils/apiError.js";
+import randomRequestId from "./middleware/requestContextMiddleware.js";
 
 const app = express();
+
+app.use(randomRequestId);
 
 app.use(express.json({ limit: "10kb" }));
 
