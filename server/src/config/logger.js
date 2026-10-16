@@ -10,6 +10,18 @@ const logger = pino({
       ? undefined
       : { target: "pino-pretty", options: { colorize: true } },
   level: process.env.LOG_LEVEL || "info",
+  redact: [
+    "password",
+    "*.password",
+    "token",
+    "*.token",
+    "refreshToken",
+    "*.refreshToken",
+    "headers.authorization",
+    "*.headers.authorization",
+    "headers.cookie",
+    "*.headers.cookie",
+  ],
 });
 
 export default logger;
