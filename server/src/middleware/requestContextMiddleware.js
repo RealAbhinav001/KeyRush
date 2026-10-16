@@ -16,9 +16,16 @@ export const requestContextMiddleware = (_req, res, next) => {
 };
 
 export const requestLogger = (req, res, next) => {
+  const start = performance.now();
   res.on("finish", () => {
+    const duration = performance.now() - start;
     logger.info(
-      { method: req.method, path: req.path, statusCode: res.statusCode },
+      {
+        method: req.method,
+        path: req.path,
+        statusCode: res.statusCode,
+        durationMs: Math.round(duration),
+      },
       "request completed",
     );
   });
