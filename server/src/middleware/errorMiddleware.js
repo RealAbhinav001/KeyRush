@@ -1,4 +1,6 @@
 import ApiError from "../utils/apiError.js";
+import logger from "../config/logger.js";
+import { getRequestId } from "../utils/requestContext.js";
 
 const errorMiddleware = (err, req, res, next) => {
   const error = (statusCode, code, message, details) => {
@@ -7,6 +9,7 @@ const errorMiddleware = (err, req, res, next) => {
         code: code,
         message: message,
         details: details,
+        requestId: getRequestId(),
       },
     });
   };
@@ -21,7 +24,7 @@ const errorMiddleware = (err, req, res, next) => {
   } else if (err.type === "entity.too.large") {
     error(413, "PAYLOAD_TOO_LARGE", "Request body is too large.");
   } else {
-    console.error(err);
+    logger.error(err);
     error(500, "INTERNAL_ERROR", "Something went wrong. Please try again later.");
   }
 };

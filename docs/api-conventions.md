@@ -117,17 +117,17 @@ Every error response, from any route, has exactly this shape:
     "code": "EMAIL_TAKEN",
     "message": "An account with this email already exists.",
     "details": [{ "field": "email", "message": "Already registered" }],
-    "requestId": "a1b2c3d4"
+    "requestId": "6b694e9c-5cbf-4d22-bbca-9fd5bdd68322"
   }
 }
 ```
 
-| Field       | Required | Rules                                                                        |
-| ----------- | -------- | ---------------------------------------------------------------------------- |
-| `code`      | ✅       | `SCREAMING_SNAKE_CASE`, **stable**: clients branch on it, so never rename it |
-| `message`   | ✅       | Human-readable; may change wording at any time                               |
-| `details`   | Optional | Field-level problems (validation). The key is absent when there are none     |
-| `requestId` | Optional | Correlates a response with server logs. Not sent yet; arrives with KR-9      |
+| Field       | Required | Rules                                                                                                  |
+| ----------- | -------- | ------------------------------------------------------------------------------------------------------ |
+| `code`      | ✅       | `SCREAMING_SNAKE_CASE`, **stable**: clients branch on it, so never rename it                           |
+| `message`   | ✅       | Human-readable; may change wording at any time                                                         |
+| `details`   | Optional | Field-level problems (validation). The key is absent when there are none                               |
+| `requestId` | ✅       | The id of this request: the same value as the `X-Request-ID` header and the `requestId` in server logs |
 
 **Validation errors report every problem at once.** `details` has one `{ field, message }` entry per problem, across body, params and query together. `field` is a path a client can match to an input: `email`, or `address.city` for nested values.
 
@@ -137,7 +137,48 @@ Every error response, from any route, has exactly this shape:
 
 Errors are created by throwing an `ApiError(statusCode, message, code, details?)` and turned into responses by **one central error-handling middleware**. Controllers never build error JSON by hand. Express 5 forwards errors thrown or rejected inside `async` handlers to that middleware, so routes need no `try/catch` for this.
 
-**Client mistakes are not server errors.** Only unexpected errors (the 500 path) are logged with `console.error`. Validation failures, malformed JSON, oversized bodies and other `ApiError`s are not.
+**Client mistakes are not server errors.** Only unexpected errors (the 500 path) log the full error at `error` level. Validation failures, malformed JSON, oversized bodies and other `ApiError`s are recorded only by the request's access log line, at `info` level (see §7.2).
+
+### 7.1 Request IDs
+
+- Every request gets an id the moment it arrives: a UUID from `crypto.randomUUID()`.
+- The id is returned on **every** response, success or error, in the **`X-Request-ID`** header. Error bodies repeat it as `error.requestId`.
+- **The server always generates its own id.** An `X-Request-ID` sent by the client is user input and is ignored.
+- The id is held in `AsyncLocalStorage` for the life of the request. Code that needs it calls `getRequestId()` (`server/src/utils/requestContext.js`); nothing passes `req` around for this. Outside a request it returns `undefined`.
+
+**Why:** a user reports "this request failed, id `6b69…`", and that id finds every log line the request produced.
+
+### 7.2 Logging
+
+All server logs go through one Pino logger (`server/src/config/logger.js`). Never use `console.*` in `server/src`.
+
+- **Format:** JSON lines in production (`NODE_ENV=production`), `pino-pretty` in development. The level comes from `LOG_LEVEL` (default `info`).
+- **Every line inside a request carries `requestId`** automatically (Pino `mixin`). Lines outside a request, such as startup, have no `requestId` key.
+- **Pass fields as an object first, the message second:** `logger.info({ raceId }, "race started")`. The message is a fixed string; values that change go in fields so they can be filtered.
+
+**Levels**
+
+| Level   | Use for                                                       | Example                           |
+| ------- | ------------------------------------------------------------- | --------------------------------- |
+| `fatal` | The process is about to exit                                  | Failed to start, forced shutdown  |
+| `error` | The server's fault; the app keeps running                     | A 500, a 503, an unexpected error |
+| `info`  | Normal work, and client mistakes (they are not server faults) | Startup, 2xx, 400, 404, 413       |
+| `debug` | Detail useful only while developing                           | Values inside a function          |
+
+**Access log:** one line per finished request, message `"Request Completed"`, with exactly these fields:
+
+```json
+{ "requestId": "6b69…", "method": "GET", "path": "/api/races", "statusCode": 200, "durationMs": 12 }
+```
+
+- Level is `error` for `statusCode >= 500`, otherwise `info`.
+- `path` never includes the query string, so values like `?token=…` are not logged.
+- `GET /api/health` is skipped when it returns 200 (load balancers call it constantly); a 503 is logged.
+
+**Secrets never reach the logs.** Two layers:
+
+1. **Don't log them (the real protection).** Never log request bodies, headers, cookies or query strings. The access log has a fixed list of fields for this reason.
+2. **Pino `redact` (the safety net).** If one slips through, these keys are replaced with `[Redacted]`: `password`, `token`, `refreshToken` (top level and one level deep), and `headers.authorization`, `headers.cookie` (top level and one level deep, e.g. `req.headers`). Redaction matches by key name and only to that depth, so it does not replace layer 1. **Add a key to the list in the same PR that introduces it.**
 
 ## 8. Authentication & authorization
 

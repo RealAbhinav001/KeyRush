@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import logger from "./logger.js";
 
 const connectDB = async () => {
   if (!process.env.MONGODB_URI) {
@@ -9,7 +10,7 @@ const connectDB = async () => {
     serverSelectionTimeoutMS: 5000,
   });
 
-  console.log("DataBase Connected");
+  logger.info("Database Connected");
 };
 
 export const isDbConnected = () => {
