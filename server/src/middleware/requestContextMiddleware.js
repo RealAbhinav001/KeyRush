@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import { requestContext } from "../utils/requestContext.js";
+import logger from "../config/logger.js";
 
 export const requestContextMiddleware = (_req, res, next) => {
   const store = {};
@@ -12,4 +13,15 @@ export const requestContextMiddleware = (_req, res, next) => {
   requestContext.run(store, () => {
     next();
   });
+};
+
+export const requestLogger = (req, res, next) => {
+  res.on("finish", () => {
+    logger.info(
+      { method: req.method, path: req.path, statusCode: res.statusCode },
+      "request completed",
+    );
+  });
+
+  next();
 };

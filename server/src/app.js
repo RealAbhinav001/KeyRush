@@ -2,11 +2,12 @@ import express from "express";
 import { isDbConnected } from "./config/db.js";
 import errorMiddleware from "./middleware/errorMiddleware.js";
 import ApiError from "./utils/apiError.js";
-import { requestContextMiddleware } from "./middleware/requestContextMiddleware.js";
+import { requestContextMiddleware, requestLogger } from "./middleware/requestContextMiddleware.js";
 
 const app = express();
 
 app.use(requestContextMiddleware);
+app.use(requestLogger);
 
 app.use(express.json({ limit: "10kb" }));
 
