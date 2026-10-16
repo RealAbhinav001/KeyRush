@@ -19,14 +19,15 @@ export const requestLogger = (req, res, next) => {
   const start = performance.now();
   res.on("finish", () => {
     const duration = performance.now() - start;
-    logger.info(
+    const level = res.statusCode >= 500 ? "error" : "info";
+    logger[level](
       {
         method: req.method,
         path: req.path,
         statusCode: res.statusCode,
         durationMs: Math.round(duration),
       },
-      "request completed",
+      "Request Completed",
     );
   });
 
