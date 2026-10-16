@@ -18,6 +18,9 @@ export const requestContextMiddleware = (_req, res, next) => {
 export const requestLogger = (req, res, next) => {
   const start = performance.now();
   res.on("finish", () => {
+    if (res.statusCode === 200 && req.path === "/api/health") {
+      return;
+    }
     const duration = performance.now() - start;
     const level = res.statusCode >= 500 ? "error" : "info";
     logger[level](
