@@ -1,0 +1,696 @@
+.kr3 {
+  --night: #0b0d14;
+  --asphalt: #131726;
+  --line: #262c40;
+  --text: #eef1f7;
+  --muted: #9aa3b8;
+  --paper: #f5f6f8;
+  --ink: #14161b;
+  --purple: #8b5cf6;
+  --green: #22c55e;
+  --yellow: #f5b700;
+  --red: #ff3b2f;
+  --display: "Saira Condensed", "Arial Narrow", sans-serif;
+  --body: "Saira", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  --gutter: clamp(1rem, 4vw, 2.75rem);
+
+  background: var(--night);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  overflow-x: clip;
+}
+
+.kr3 *,
+.kr3 *::before,
+.kr3 *::after {
+  box-sizing: border-box;
+}
+
+.kr3 a {
+  color: inherit;
+}
+
+.kr3 :focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.kr3-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.kr3-skip {
+  position: fixed;
+  left: 1rem;
+  top: -4rem;
+  z-index: 50;
+  padding: 0.6rem 1rem;
+  background: var(--yellow);
+  color: var(--ink) !important;
+  font-weight: 600;
+}
+
+.kr3-skip:focus {
+  top: 1rem;
+}
+
+/* Nav */
+.kr3-nav {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  padding: 1rem var(--gutter);
+  background: linear-gradient(rgba(11, 13, 20, 0.85), rgba(11, 13, 20, 0));
+}
+
+.kr3-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  font-style: italic;
+  text-decoration: none;
+}
+
+.kr3-logo-mark {
+  width: 1.4rem;
+  height: 1.4rem;
+  border: 2px solid var(--text);
+  border-radius: 3px;
+  transform: skewX(-12deg);
+  background: conic-gradient(var(--text) 25%, transparent 0 50%, var(--text) 0 75%, transparent 0) 0
+    0 / 0.7rem 0.7rem;
+}
+
+.kr3-nav nav {
+  margin-left: auto;
+}
+
+.kr3-nav ul {
+  display: flex;
+  gap: 1.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.kr3-nav ul a {
+  color: var(--muted);
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+
+.kr3-nav ul a:hover {
+  color: var(--text);
+}
+
+/* Buttons */
+.kr3-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.1rem;
+  padding: 0 1.6rem;
+  background: var(--text);
+  color: var(--ink) !important;
+  font-family: var(--display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  text-decoration: none;
+  border: 2px solid var(--text);
+  border-radius: 6px;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.kr3-btn:hover {
+  background: var(--purple);
+  border-color: var(--purple);
+  color: var(--text) !important;
+}
+
+.kr3-btn:active {
+  transform: translateY(1px);
+}
+
+.kr3-btn-small {
+  min-height: 2.5rem;
+  padding: 0 1.1rem;
+  font-size: 1.05rem;
+}
+
+.kr3-btn-ghost {
+  background: rgba(11, 13, 20, 0.35);
+  color: var(--text) !important;
+  border-color: rgba(238, 241, 247, 0.55);
+  backdrop-filter: blur(6px);
+}
+
+/* Hero */
+.kr3-hero {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  min-height: 100svh;
+  padding: 0 var(--gutter) clamp(4rem, 10vh, 7rem);
+  isolation: isolate;
+}
+
+.kr3-hero-scene,
+.kr3-hero-shade {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+}
+
+.kr3-canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.kr3-hero-fallback {
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(60% 50% at 70% 40%, rgba(139, 92, 246, 0.35), transparent 70%),
+    radial-gradient(40% 40% at 20% 70%, rgba(34, 197, 94, 0.18), transparent 70%), var(--night);
+}
+
+.kr3-hero-shade {
+  z-index: -1;
+  background:
+    linear-gradient(90deg, rgba(11, 13, 20, 0.92) 0%, rgba(11, 13, 20, 0.55) 45%, transparent 75%),
+    linear-gradient(0deg, var(--night) 0%, transparent 35%);
+  pointer-events: none;
+}
+
+.kr3-hero-copy {
+  max-width: 44rem;
+}
+
+.kr3-hero h1 {
+  margin: 0;
+  font-family: var(--display);
+  font-size: clamp(3.8rem, 10.5vw, 9rem);
+  font-weight: 700;
+  font-style: italic;
+  line-height: 0.88;
+  letter-spacing: -0.025em;
+}
+
+/* SplitText masks clip italic glyphs; give each word room on the right */
+.kr3-hero h1 > * {
+  padding: 0 0.12em 0.06em 0;
+  margin: 0 -0.12em -0.06em 0;
+}
+
+.kr3-lede {
+  max-width: 32rem;
+  margin: 1.6rem 0 0;
+  color: #c3cadb;
+  font-size: 1.2rem;
+}
+
+.kr3-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 2.2rem;
+}
+
+.kr3-hero-hint {
+  position: absolute;
+  right: var(--gutter);
+  bottom: clamp(4rem, 10vh, 7rem);
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  writing-mode: vertical-rl;
+}
+
+/* Lights out */
+.kr3-lights {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 2.5rem;
+  min-height: 100svh;
+  padding: 6rem var(--gutter);
+  text-align: center;
+}
+
+.kr3-gantry {
+  display: flex;
+  gap: clamp(0.6rem, 2.4vw, 1.6rem);
+  padding: clamp(1rem, 2.5vw, 1.6rem);
+  background: #05060a;
+  border: 2px solid var(--line);
+  border-radius: 14px;
+}
+
+.kr3-gantry-col {
+  display: grid;
+  gap: clamp(0.4rem, 1.2vw, 0.75rem);
+  padding: clamp(0.5rem, 1.4vw, 0.85rem);
+  background: #10131c;
+  border-radius: 10px;
+}
+
+.kr3-bulb {
+  width: clamp(2rem, 6vw, 4rem);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #1a1d28;
+  box-shadow: inset 0 -4px 10px rgba(0, 0, 0, 0.5);
+}
+
+.kr3-bulb-red {
+  background: #2a1514;
+}
+
+.kr3-lights-text {
+  display: grid;
+  place-items: center;
+}
+
+.kr3-lights-text > * {
+  grid-area: 1 / 1;
+}
+
+.kr3-lights-wait {
+  margin: 0;
+  max-width: 28rem;
+  color: var(--muted);
+  font-size: 1.15rem;
+}
+
+.kr3-lights-go {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  font-family: var(--display);
+  font-size: clamp(3rem, 8vw, 6rem);
+  font-weight: 700;
+  font-style: italic;
+  line-height: 0.95;
+}
+
+.kr3-lights-go span {
+  font-family: var(--body);
+  font-size: 1.15rem;
+  font-weight: 400;
+  font-style: normal;
+  color: var(--muted);
+}
+
+/* Live timing */
+.kr3-timing {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(2rem, 6vw, 5rem);
+  align-items: center;
+  min-height: 100svh;
+  padding: 6rem var(--gutter);
+}
+
+.kr3 h2 {
+  margin: 0 0 1.25rem;
+  font-family: var(--display);
+  font-size: clamp(2.6rem, 5.5vw, 4.6rem);
+  font-weight: 700;
+  font-style: italic;
+  line-height: 0.95;
+  letter-spacing: -0.015em;
+}
+
+.kr3-timing-copy p,
+.kr3-ghost-copy p,
+.kr3-modes-intro p {
+  max-width: 30rem;
+  margin: 0 0 1rem;
+  color: var(--muted);
+}
+
+.kr3-tower {
+  background: #0f121c;
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.kr3-tower-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.9rem 1.2rem;
+  border-bottom: 2px solid var(--line);
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.kr3-live-dot {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  background: var(--red);
+  animation: kr3-pulse 1.4s ease-in-out infinite;
+}
+
+.kr3-tower ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.kr3-row {
+  --tone: var(--text);
+  display: grid;
+  grid-template-columns: 2.6rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.2rem;
+  border-bottom: 1px solid var(--line);
+  background: #0f121c;
+}
+
+.kr3-row:last-child {
+  border-bottom: 0;
+}
+
+.kr3-tone-fastest {
+  --tone: var(--purple);
+}
+
+.kr3-tone-pb {
+  --tone: var(--green);
+}
+
+.kr3-tone-ghost {
+  --tone: #7d869c;
+}
+
+.kr3-row-pos {
+  display: grid;
+  place-items: center;
+  height: 2.6rem;
+  border-radius: 6px;
+  background: var(--text);
+  color: var(--ink);
+  font-family: var(--display);
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.kr3-row-name {
+  font-size: 1.15rem;
+  font-weight: 600;
+  border-left: 4px solid var(--tone);
+  padding-left: 0.8rem;
+}
+
+.kr3-row-wpm {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  font-family: var(--display);
+  font-size: 2.1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--tone);
+}
+
+.kr3-row-wpm small {
+  font-family: var(--body);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+/* Modes */
+.kr3-modes {
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  padding: 6rem 0;
+}
+
+.kr3-modes-track {
+  display: flex;
+  align-items: stretch;
+  gap: clamp(1.25rem, 3vw, 2rem);
+  padding: 0 var(--gutter);
+  will-change: transform;
+}
+
+.kr3-modes-intro {
+  flex: 0 0 min(26rem, 80vw);
+  align-self: center;
+}
+
+.kr3-mode {
+  flex: 0 0 min(32rem, 82vw);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: clamp(1.5rem, 3vw, 2.4rem);
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: 14px;
+}
+
+.kr3-mode h3 {
+  margin: 0;
+  font-family: var(--display);
+  font-size: clamp(2.2rem, 4vw, 3.2rem);
+  font-weight: 700;
+  font-style: italic;
+  line-height: 1;
+}
+
+.kr3-mode-line {
+  display: block;
+  padding: 1rem 1.1rem;
+  background: var(--ink);
+  color: #d6dcff;
+  border-radius: 8px;
+  font-family: var(--mono);
+  font-size: 0.9rem;
+  white-space: pre-wrap;
+}
+
+.kr3-mode p {
+  margin: auto 0 0;
+  color: #4b5262;
+}
+
+/* Ghost */
+.kr3-ghost {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: clamp(2rem, 6vw, 5rem);
+  align-items: center;
+  padding: clamp(5rem, 12vh, 9rem) var(--gutter);
+}
+
+.kr3-delta {
+  padding: clamp(1.5rem, 3vw, 2.2rem);
+  background: #0f121c;
+  border: 2px solid var(--line);
+  border-radius: 14px;
+}
+
+.kr3-delta-label {
+  display: block;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.kr3-delta-num {
+  display: block;
+  margin: 0.2rem 0 1.4rem;
+  font-family: var(--display);
+  font-size: clamp(4.4rem, 11vw, 7.5rem);
+  font-weight: 700;
+  font-style: italic;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--yellow);
+  transition: color 200ms ease;
+}
+
+.kr3-delta-num[data-ahead="true"] {
+  color: var(--green);
+}
+
+.kr3-delta-bars {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.kr3-delta-row {
+  display: grid;
+  grid-template-columns: 3.6rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.8rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.kr3-bar {
+  height: 0.65rem;
+  border-radius: 3px;
+  transform-origin: left center;
+}
+
+.kr3-bar-you {
+  background: var(--green);
+}
+
+.kr3-bar-ghost {
+  transform: scaleX(0.86);
+  background: repeating-linear-gradient(90deg, #5d667c 0 10px, transparent 10px 14px);
+}
+
+/* CTA + footer */
+.kr3-cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: clamp(4rem, 10vh, 7rem) var(--gutter);
+  border-top: 2px solid var(--line);
+}
+
+.kr3-cta h2 {
+  margin: 0;
+}
+
+.kr3-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem var(--gutter) 2.5rem;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.kr3-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-left: auto;
+}
+
+.kr3-status-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--yellow);
+}
+
+.kr3-status-ok .kr3-status-dot {
+  background: var(--green);
+}
+
+.kr3-status-error .kr3-status-dot {
+  background: var(--red);
+}
+
+@keyframes kr3-pulse {
+  50% {
+    opacity: 0.3;
+  }
+}
+
+/* Responsive */
+@media (max-width: 899px) {
+  .kr3-timing,
+  .kr3-ghost {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .kr3-modes {
+    min-height: 0;
+  }
+
+  .kr3-modes-track {
+    flex-direction: column;
+  }
+
+  .kr3-modes-intro,
+  .kr3-mode {
+    flex-basis: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .kr3-nav nav,
+  .kr3-hero-hint {
+    display: none;
+  }
+
+  .kr3-nav .kr3-btn {
+    margin-left: auto;
+  }
+
+  .kr3-hero-shade {
+    background: linear-gradient(
+      0deg,
+      var(--night) 10%,
+      rgba(11, 13, 20, 0.6) 55%,
+      rgba(11, 13, 20, 0.2)
+    );
+  }
+
+  .kr3-row {
+    grid-template-columns: 2.2rem minmax(0, 1fr) auto;
+    gap: 0.7rem;
+    padding: 0.85rem;
+  }
+
+  .kr3-row-wpm {
+    font-size: 1.7rem;
+  }
+
+  .kr3-status {
+    margin-left: 0;
+  }
+}
+
+/* Reduced motion: lights shown as lit, no pinning, no pulsing */
+@media (prefers-reduced-motion: reduce) {
+  .kr3-live-dot {
+    animation: none;
+  }
+
+  .kr3-bulb-red {
+    background: var(--red);
+  }
+
+  .kr3-btn {
+    transition: none;
+  }
+}

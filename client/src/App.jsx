@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { getHealth } from "./api/health";
+import Landing from "./pages/Landing.jsx";
 
 const FALLBACK_ERROR = "Can't reach the server. Try again.";
 
@@ -29,13 +30,7 @@ const App = () => {
     return () => controller.abort();
   }, []);
 
-  return (
-    <main>
-      {health.status === "loading" && <p>Loading…</p>}
-      {health.status === "error" && <p role="alert">{health.message}</p>}
-      {health.status === "ok" && <p>Server: {health.data.status}</p>}
-    </main>
-  );
+  return <Landing serverStatus={health.status} />;
 };
 
 export default App;
