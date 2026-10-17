@@ -63,23 +63,23 @@ The server always decides whether a requested transition is allowed (state machi
 
 ## 5. Status codes
 
-| Situation                                                               | Code    | Error `code`                              |
-| ----------------------------------------------------------------------- | ------- | ----------------------------------------- |
-| Read or update succeeded                                                | **200** | —                                         |
-| Resource created                                                        | **201** | —                                         |
-| Deleted, nothing to return                                              | **204** | —                                         |
-| Malformed JSON body                                                     | **400** | `INVALID_JSON`                            |
-| Request fails validation (shape, type, format, limits)                  | **400** | `VALIDATION_ERROR`                        |
-| Invalid ID format in the path                                           | **400** | `INVALID_ID`                              |
-| Request body larger than 10 kB                                          | **413** | `PAYLOAD_TOO_LARGE`                       |
-| Missing, invalid or expired token                                       | **401** | `UNAUTHENTICATED` / `TOKEN_EXPIRED`       |
-| Wrong email or password                                                 | **401** | `INVALID_CREDENTIALS`                     |
-| Authenticated, but not allowed to do this                               | **403** | `FORBIDDEN`                               |
-| Resource doesn't exist, or the caller may not know it exists            | **404** | `NOT_FOUND`                               |
-| Conflicts with current state (duplicate, race full, invalid transition) | **409** | specific, e.g. `EMAIL_TAKEN`, `RACE_FULL` |
-| Rate limit exceeded                                                     | **429** | `RATE_LIMITED`                            |
-| Unexpected bug                                                          | **500** | `INTERNAL_ERROR`                          |
-| A dependency (DB) is down                                               | **503** | `SERVICE_UNAVAILABLE`                     |
+| Situation                                                               | Code    | Error `code`                                                |
+| ----------------------------------------------------------------------- | ------- | ----------------------------------------------------------- |
+| Read or update succeeded                                                | **200** | —                                                           |
+| Resource created                                                        | **201** | —                                                           |
+| Deleted, nothing to return                                              | **204** | —                                                           |
+| Malformed JSON body                                                     | **400** | `INVALID_JSON`                                              |
+| Request fails validation (shape, type, format, limits)                  | **400** | `VALIDATION_ERROR`                                          |
+| Invalid ID format in the path                                           | **400** | `INVALID_ID`                                                |
+| Request body larger than 10 kB                                          | **413** | `PAYLOAD_TOO_LARGE`                                         |
+| Missing, invalid or expired token                                       | **401** | `UNAUTHENTICATED` / `TOKEN_EXPIRED`                         |
+| Wrong email or password                                                 | **401** | `INVALID_CREDENTIALS`                                       |
+| Authenticated, but not allowed to do this                               | **403** | `FORBIDDEN`                                                 |
+| Resource doesn't exist, or the caller may not know it exists            | **404** | `NOT_FOUND`                                                 |
+| Conflicts with current state (duplicate, race full, invalid transition) | **409** | specific, e.g. `EMAIL_TAKEN`, `USERNAME_TAKEN`, `RACE_FULL` |
+| Rate limit exceeded                                                     | **429** | `RATE_LIMITED`                                              |
+| Unexpected bug                                                          | **500** | `INTERNAL_ERROR`                                            |
+| A dependency (DB) is down                                               | **503** | `SERVICE_UNAVAILABLE`                                       |
 
 **Decision: 400 for all validation errors.** We don't use 422. One code for "fix your request" keeps clients simple, and the error `code` + `details` already say exactly what's wrong.
 
@@ -137,6 +137,18 @@ Every error response, from any route, has exactly this shape:
 
 Errors are created by throwing an `ApiError(statusCode, message, code, details?)` and turned into responses by **one central error-handling middleware**. Controllers never build error JSON by hand. Express 5 forwards errors thrown or rejected inside `async` handlers to that middleware, so routes need no `try/catch` for this.
 
+**Services don't know HTTP.** `ApiError` belongs to the HTTP layer (routes, middleware, controllers). A service reports a known failure by throwing a plain `Error` with a stable `code`, and no status:
+
+```js
+const err = new Error("email is already taken");
+err.code = "EMAIL_TAKEN";
+throw err;
+```
+
+The error middleware maps the code to a status with one lookup table, `STATUS_BY_CODE` (`server/src/middleware/errorMiddleware.js`). A code that isn't in the table is treated as unexpected: **500**, logged in full. **Add a code to the table in the same PR that starts throwing it.**
+
+**A service catches an error only to give it a new meaning** (for example MongoDB's duplicate key `11000` becomes `EMAIL_TAKEN`). Every other error is rethrown unchanged (`throw error`), never replaced with a new, vaguer one.
+
 **Client mistakes are not server errors.** Only unexpected errors (the 500 path) log the full error at `error` level. Validation failures, malformed JSON, oversized bodies and other `ApiError`s are recorded only by the request's access log line, at `info` level (see §7.2).
 
 ### 7.1 Request IDs
@@ -189,6 +201,21 @@ All server logs go through one Pino logger (`server/src/config/logger.js`). Neve
 - **Never trust identity from the client.** `userId`, `hostId` or `role` in a request body are ignored; they come from the token.
 - Hiding a button in the UI is UX, not security.
 
+### 8.1 Signup and stored users
+
+`POST /api/auth/signup` takes `{ username, email, password }` and returns **201** with the new user: `{ id, username, email, createdAt, updatedAt }`.
+
+| Field      | Rules                                                                                    |
+| ---------- | ---------------------------------------------------------------------------------------- |
+| `username` | Trimmed and lowercased, 3–20 characters, letters, numbers and `_` only. Unique           |
+| `email`    | Trimmed and lowercased, valid email. Unique                                              |
+| `password` | 8–64 characters. The maximum stops very long inputs from tying up the CPU during hashing |
+
+- Trimming and lowercasing happen **twice on purpose**: in the Zod schema (so validation sees the clean value) and in the Mongoose schema (so every write path is covered, not just HTTP).
+- Passwords are hashed with **Argon2id** (`argon2` package) and stored as `passwordHash`. The plain password is never stored, logged or returned.
+- **Duplicates are caught by the database**, not by a lookup first. `username` and `email` have unique indexes, so two identical signups at the same moment give one **201** and one **409**, never a 500. MongoDB's error `11000` is mapped using `keyPattern` (the field name), not `keyValue` (the user's data).
+- Responses are shaped by the User model's `toJSON` transform (`_id` becomes `id`; `passwordHash` and `__v` are removed). Don't use `.lean()` for anything sent to a client: lean results skip the transform.
+
 ## 9. Naming & formats
 
 | Item              | Convention                  | Example                      |
@@ -209,7 +236,7 @@ HEALTH
   GET    /api/health                          public      200 | 503
 
 AUTH (documented exception, §3)
-  POST   /api/auth/signup                     public      201 | 400 | 409 EMAIL_TAKEN | 429
+  POST   /api/auth/signup                     public      201 | 400 | 409 EMAIL_TAKEN / USERNAME_TAKEN | 429
   POST   /api/auth/login                      public      200 | 400 | 401 INVALID_CREDENTIALS | 429
   POST   /api/auth/refresh                    public      200 | 401
   POST   /api/auth/logout                     auth        204
