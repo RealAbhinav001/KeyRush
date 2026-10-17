@@ -1,3 +1,5 @@
 packages:
   - client
   - server
+allowBuilds:
+  argon2: false
