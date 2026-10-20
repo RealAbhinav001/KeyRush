@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
 
-export const accessToken = (userId) => {
+export const createAccessToken = (userId) => {
   const token = jwt.sign(
     {
       userId: userId,
@@ -15,7 +15,7 @@ export const accessToken = (userId) => {
   return token;
 };
 
-export const refreshToken = (userId) => {
+export const createRefreshToken = (userId) => {
   const jti = crypto.randomUUID();
   const token = jwt.sign(
     {

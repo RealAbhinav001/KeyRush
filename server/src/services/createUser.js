@@ -1,13 +1,8 @@
 import User from "../models/userModel.js";
-import argon2 from "argon2";
+import { createHashPassword } from "../utils/password.js";
 
 const createUser = async ({ username, email, password }) => {
-  const hashPassword = await argon2.hash(password, {
-    type: argon2.argon2id,
-    memoryCost: 65536,
-    timeCost: 3,
-    parallelism: 4,
-  });
+  const hashPassword = await createHashPassword(password);
 
   try {
     const user = await User.create({

@@ -13,3 +13,8 @@ export const signUp = z.object({
   email: z.string().trim().toLowerCase().pipe(z.email()),
   password: z.string().min(8).max(64),
 });
+
+export const login = z.object({
+  email: z.string().trim().toLowerCase().pipe(z.email()),
+  password: z.string().max(64),
+});
