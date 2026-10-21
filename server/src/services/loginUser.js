@@ -13,7 +13,7 @@ const loginUser = async ({ email, password }) => {
     throw err;
   }
 
-  return user
+  return user;
 };
 
 export default loginUser;
