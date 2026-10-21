@@ -5,7 +5,7 @@ export const signUpController = async (req, res) => {
   const data = req.validated.body;
   const user = await createUser(data);
 
-  const tokens = issueToken(user.id);
+  const tokens = await issueToken(user.id);
 
   res.status(201).json({
     user: user,
