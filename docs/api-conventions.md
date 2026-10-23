@@ -72,7 +72,7 @@ The server always decides whether a requested transition is allowed (state machi
 | Request fails validation (shape, type, format, limits)                  | **400** | `VALIDATION_ERROR`                                          |
 | Invalid ID format in the path                                           | **400** | `INVALID_ID`                                                |
 | Request body larger than 10 kB                                          | **413** | `PAYLOAD_TOO_LARGE`                                         |
-| Missing, invalid or expired token                                       | **401** | `UNAUTHENTICATED` / `TOKEN_EXPIRED`                         |
+| Missing, invalid or expired token or session                            | **401** | `UNAUTHENTICATED`                                           |
 | Wrong email or password                                                 | **401** | `INVALID_CREDENTIALS`                                       |
 | Authenticated, but not allowed to do this                               | **403** | `FORBIDDEN`                                                 |
 | Resource doesn't exist, or the caller may not know it exists            | **404** | `NOT_FOUND`                                                 |
@@ -195,7 +195,7 @@ All server logs go through one Pino logger (`server/src/config/logger.js`). Neve
 ## 8. Authentication & authorization
 
 - **Deny by default.** Every route requires authentication unless it's listed here as public.
-- **Public routes:** `POST /api/auth/signup`, `POST /api/auth/login`, `POST /api/auth/refresh`, `GET /api/health`, `GET /api/leaderboard`.
+- **Public routes:** `POST /api/auth/signup`, `POST /api/auth/login`, `POST /api/auth/refresh`, `POST /api/auth/logout`, `GET /api/health`, `GET /api/leaderboard`. Refresh and logout need no access token; they read the refresh token cookie (§8.2).
 - Authentication runs as middleware and sets the current user. **401** if it fails.
 - Authorization (ownership, roles, state) is checked **on the server for every request**. **403/404** if it fails (see §5).
 - **Never trust identity from the client.** `userId`, `hostId` or `role` in a request body are ignored; they come from the token.
@@ -203,7 +203,7 @@ All server logs go through one Pino logger (`server/src/config/logger.js`). Neve
 
 ### 8.1 Signup and stored users
 
-`POST /api/auth/signup` takes `{ username, email, password }` and returns **201** with the new user: `{ id, username, email, createdAt, updatedAt }`.
+`POST /api/auth/signup` takes `{ username, email, password }` and logs the user in straight away (Keyrush has no email verification). It returns **201** with `{ user, accessToken }`, where `user` is `{ id, username, email, createdAt, updatedAt }`, and sets the refresh token cookie (§8.2).
 
 | Field      | Rules                                                                                    |
 | ---------- | ---------------------------------------------------------------------------------------- |
@@ -215,6 +215,53 @@ All server logs go through one Pino logger (`server/src/config/logger.js`). Neve
 - Passwords are hashed with **Argon2id** (`argon2` package) and stored as `passwordHash`. The plain password is never stored, logged or returned.
 - **Duplicates are caught by the database**, not by a lookup first. `username` and `email` have unique indexes, so two identical signups at the same moment give one **201** and one **409**, never a 500. MongoDB's error `11000` is mapped using `keyPattern` (the field name), not `keyValue` (the user's data).
 - Responses are shaped by the User model's `toJSON` transform (`_id` becomes `id`; `passwordHash` and `__v` are removed). Don't use `.lean()` for anything sent to a client: lean results skip the transform.
+
+### 8.2 Tokens, sessions and cookies
+
+Two JWTs, signed with **two different secrets** (`JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`), so one can never be accepted as the other and one leak doesn't expose both. Both secrets are validated at startup by `server/src/config/env.js`.
+
+| Token   | Lifetime   | Payload           | Where the client keeps it                            | Sent as                         |
+| ------- | ---------- | ----------------- | ---------------------------------------------------- | ------------------------------- |
+| Access  | 10 minutes | `{ userId }`      | In memory only, from the JSON body                   | `Authorization: Bearer <token>` |
+| Refresh | 7 days     | `{ userId, jti }` | `refreshToken` cookie; page JavaScript can't read it | Cookie, sent by the browser     |
+
+- **A JWT payload is encoded, not encrypted.** Put only ids in it: never email, password data or anything that changes.
+- **Access tokens are stateless**: the server checks signature and expiry only. **Refresh tokens are stateful**: each one has a unique `jti`, stored in the `sessions` collection.
+
+**Sessions** (`server/src/models/sessionModel.js`): `{ jti (unique), userId, expireAt }`, one document per logged-in device.
+
+- `expireAt` is taken from the refresh token's own `exp`, converted once in `server/src/utils/token.js` (`exp` is in seconds; JavaScript dates are milliseconds). The session, the token and the cookie therefore always expire at the same moment.
+- A TTL index (`expires: 0`) lets MongoDB delete a session when `expireAt` passes. Sessions that are rotated or logged out are deleted straight away; TTL only cleans up devices that never came back.
+
+**Refresh token cookie** (one shared helper in `authController.js`):
+
+| Option     | Value                             | Why                                                              |
+| ---------- | --------------------------------- | ---------------------------------------------------------------- |
+| `httpOnly` | `true`                            | Page JavaScript (and an XSS payload) can't read it               |
+| `secure`   | `true` when `NODE_ENV=production` | Only sent over HTTPS in production; localhost has no HTTPS       |
+| `sameSite` | `strict`                          | Not sent on requests started by other sites                      |
+| `path`     | `/api/auth`                       | Only sent to the auth routes that need it, not on every API call |
+| `expires`  | the token's expiry `Date`         | Same moment as the session                                       |
+
+**`NODE_ENV=production` must be set on deploy.** Without it the cookie isn't marked `Secure`, and the logger falls back to `pino-pretty`, which isn't installed in production.
+
+### 8.3 Login, refresh and logout
+
+**Login** (`POST /api/auth/login`, body `{ email, password }`):
+
+- Its own Zod schema: email trimmed and lowercased; password capped at 64 characters, **no minimum** (login checks a password, it doesn't enforce the signup policy, so changing that policy can't lock out existing users). Without a schema, a body like `{ "email": { "$ne": null } }` would turn the lookup into "any user" (NoSQL injection); now it's a 400.
+- Unknown email and wrong password give the same **401 `INVALID_CREDENTIALS`**, `"Invalid email or password"`, **and take the same time**: when the email isn't found, the password is still verified against a dummy Argon2id hash created at startup with the same settings (`server/src/utils/password.js`). Measured median of 25: unknown email 63.7 ms, wrong password 62.7 ms; without the dummy hash an unknown email returned in 2.4 ms.
+- Returns **200** `{ user, accessToken }` and sets the refresh token cookie.
+
+**Refresh** (`POST /api/auth/refresh`, no body): the browser sends the cookie; the response is **200** `{ accessToken }` plus a new cookie.
+
+1. The cookie is cleared first, so any failure leaves the client with no stale cookie.
+2. The token is verified with the refresh secret, and its `jti` is found **and deleted in one step** (`findOneAndDelete`), so two refreshes racing with the same token can't both succeed.
+3. A new access token, refresh token and session are issued.
+
+**Rotation:** every refresh token works **once**. Reusing an old one (for example a stolen copy) returns 401. Every failure (no cookie, bad signature, expired, unknown or already-used `jti`) returns the same **401 `UNAUTHENTICATED`**, `"Your session has expired. Please log in again."`, without saying which one, and the client should send the user to log in.
+
+**Logout** (`POST /api/auth/logout`): clears the cookie and deletes that device's session. It is **idempotent and always returns 204**: no cookie, an invalid token or an already-deleted session all mean "this device is logged out". The token is verified before its `jti` is used, so a forged token can't log someone else out. A database failure is not swallowed: it returns 500.
 
 ## 9. Naming & formats
 
@@ -238,8 +285,8 @@ HEALTH
 AUTH (documented exception, §3)
   POST   /api/auth/signup                     public      201 | 400 | 409 EMAIL_TAKEN / USERNAME_TAKEN | 429
   POST   /api/auth/login                      public      200 | 400 | 401 INVALID_CREDENTIALS | 429
-  POST   /api/auth/refresh                    public      200 | 401
-  POST   /api/auth/logout                     auth        204
+  POST   /api/auth/refresh                    cookie      200 | 401 UNAUTHENTICATED
+  POST   /api/auth/logout                     cookie      204
 
 USERS
   GET    /api/users/me                        auth        200 | 401
