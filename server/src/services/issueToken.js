@@ -9,8 +9,12 @@ export const issueToken = async (userId) => {
   await Session.create({
     jti: refreshToken.jti,
     userId: userId,
-    expireAt: new Date(refreshToken.expireAt * 1000),
+    expireAt: refreshToken.expireAt,
   });
 
-  return { accessToken, refreshToken: refreshToken.token, refreshTokenJti: refreshToken.jti };
+  return {
+    accessToken,
+    refreshToken: refreshToken.token,
+    refreshTokenExpireAt: refreshToken.expireAt,
+  };
 };

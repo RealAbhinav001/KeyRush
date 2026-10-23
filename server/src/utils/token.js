@@ -28,7 +28,7 @@ export const createRefreshToken = (userId) => {
     },
   );
 
-  const expireAt = jwt.decode(token).exp;
+  const expireAt = new Date(jwt.decode(token).exp * 1000);
 
   return { token, jti, expireAt };
 };
