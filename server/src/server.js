@@ -1,8 +1,9 @@
 import app from "./app.js";
 import connectDB, { disconnectDB } from "./config/db.js";
 import logger from "./config/logger.js";
+import { env } from "./config/env.js";
 
-const PORT = process.env.PORT || 4000;
+const PORT = env.PORT;
 
 const shutdownDataBase = async () => {
   try {
