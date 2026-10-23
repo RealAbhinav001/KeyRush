@@ -6,6 +6,7 @@ const STATUS_BY_CODE = {
   EMAIL_TAKEN: 409,
   USERNAME_TAKEN: 409,
   INVALID_CREDENTIALS: 401,
+  UNAUTHENTICATED: 401,
 };
 
 const errorMiddleware = (err, req, res, next) => {

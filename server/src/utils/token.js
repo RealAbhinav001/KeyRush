@@ -32,3 +32,33 @@ export const createRefreshToken = (userId) => {
 
   return { token, jti, expireAt };
 };
+
+export const verifyAccessToken = (accessToken) => {
+  const data = jwt.verify(accessToken, env.JWT_ACCESS_SECRET, (err, decode) => {
+    if (err) {
+      const err = new Error("Your session has expired. Please log in again.");
+      err.code = "UNAUTHENTICATED";
+
+      throw err;
+    } else {
+      return decode;
+    }
+  });
+
+  return data;
+};
+
+export const verifyRefreshToken = (refreshToken) => {
+  const data = jwt.verify(refreshToken, env.JWT_REFRESH_SECRET, (err, decode) => {
+    if (err) {
+      const err = new Error("Your session has expired. Please log in again.");
+      err.code = "UNAUTHENTICATED";
+
+      throw err;
+    } else {
+      return decode;
+    }
+  });
+
+  return data;
+};

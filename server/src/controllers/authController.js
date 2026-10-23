@@ -2,6 +2,9 @@ import createUser from "../services/createUser.js";
 import { issueToken } from "../services/issueToken.js";
 import loginUser from "../services/loginUser.js";
 import { env } from "../config/env.js";
+import { refreshToken } from "../services/refreshToken.js";
+
+const Refresh_Token_Path = "/api/auth";
 
 const cookieOptions = (tokens) => {
   return {
@@ -9,7 +12,7 @@ const cookieOptions = (tokens) => {
     secure: env.NODE_ENV === "production" ? true : false,
     sameSite: "strict",
     expires: tokens.refreshTokenExpireAt,
-    path: "/api/auth",
+    path: Refresh_Token_Path,
   };
 };
 
@@ -38,5 +41,19 @@ export const loginController = async (req, res) => {
   res.status(200).json({
     user: user,
     accessToken: tokens.accessToken,
+  });
+};
+
+export const refreshController = async (req, res) => {
+  const token = req.cookies.refreshToken;
+
+  res.clearCookie("refreshToken", { path: Refresh_Token_Path });
+
+  const result = await refreshToken(token);
+
+  res.cookie("refreshToken", result.refreshToken, cookieOptions(result));
+
+  res.status(200).json({
+    accessToken: result.accessToken,
   });
 };
