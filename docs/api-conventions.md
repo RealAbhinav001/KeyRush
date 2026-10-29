@@ -105,6 +105,7 @@ The server always decides whether a requested transition is allowed (state machi
 - Strings are normalized where it matters (email: trimmed + lowercased).
 - Query params arrive as strings and are **coerced** by the schema (`?limit=20` → number).
 - JSON bodies are limited to **10 kB**. A larger body is rejected with `413 PAYLOAD_TOO_LARGE`; a body that is not valid JSON is rejected with `400 INVALID_JSON`.
+- **The access token is read only from the `Authorization` header.** A token in the query, the body or a cookie is never used to authenticate a request (see §8.4).
 - **Secrets never go in URLs** (tokens, passwords): they end up in logs and browser history.
 
 ## 7. Errors
@@ -144,6 +145,8 @@ const err = new Error("email is already taken");
 err.code = "EMAIL_TAKEN";
 throw err;
 ```
+
+**Authentication failures use one factory.** Every failed access-token check throws `unauthenticatedError()` (`server/src/utils/errors.js`), which returns a new `Error` with code `UNAUTHENTICATED` and the message `"Authentication Required"`. It is a function, not a shared constant, so every throw gets its own stack trace and no state is shared between requests. Don't build this error by hand anywhere else. (The refresh flow keeps its own message, see §8.3.)
 
 The error middleware maps the code to a status with one lookup table, `STATUS_BY_CODE` (`server/src/middleware/errorMiddleware.js`). A code that isn't in the table is treated as unexpected: **500**, logged in full. **Add a code to the table in the same PR that starts throwing it.**
 
@@ -198,7 +201,7 @@ All server logs go through one Pino logger (`server/src/config/logger.js`). Neve
 - **Public routes:** `POST /api/auth/signup`, `POST /api/auth/login`, `POST /api/auth/refresh`, `POST /api/auth/logout`, `GET /api/health`, `GET /api/leaderboard`. Refresh and logout need no access token; they read the refresh token cookie (§8.2).
 - Authentication runs as middleware and sets the current user. **401** if it fails.
 - Authorization (ownership, roles, state) is checked **on the server for every request**. **403/404** if it fails (see §5).
-- **Never trust identity from the client.** `userId`, `hostId` or `role` in a request body are ignored; they come from the token.
+- **Never trust identity from the client.** `userId`, `hostId` or `role` in a request body or query string are ignored; they come from the token.
 - Hiding a button in the UI is UX, not security.
 
 ### 8.1 Signup and stored users
@@ -262,6 +265,29 @@ Two JWTs, signed with **two different secrets** (`JWT_ACCESS_SECRET`, `JWT_REFRE
 **Rotation:** every refresh token works **once**. Reusing an old one (for example a stolen copy) returns 401. Every failure (no cookie, bad signature, expired, unknown or already-used `jti`) returns the same **401 `UNAUTHENTICATED`**, `"Your session has expired. Please log in again."`, without saying which one, and the client should send the user to log in.
 
 **Logout** (`POST /api/auth/logout`): clears the cookie and deletes that device's session. It is **idempotent and always returns 204**: no cookie, an invalid token or an already-deleted session all mean "this device is logged out". The token is verified before its `jti` is used, so a forged token can't log someone else out. A database failure is not swallowed: it returns 500.
+
+### 8.4 Protected routes and the current user
+
+A route is protected by adding **one middleware**, `requireAuth` (`server/src/middleware/authMiddleware.js`), to its definition:
+
+```js
+userRouter.get("/me", requireAuth, getMeController);
+```
+
+No route repeats the check itself. `requireAuth` does four things, in order:
+
+1. **Reads the header.** It must be `Authorization: <scheme> <token>`: exactly two parts, separated by one space.
+   - The scheme must be `Bearer`, compared **case-insensitively** (`bearer` and `BEARER` are accepted, as RFC 6750 and RFC 9110 allow). Any other scheme (`Token`, `Basic`) is rejected.
+   - A missing header, a missing token, extra parts or extra spaces are rejected.
+2. **Verifies the access token** with the access secret (`verifyAccessToken`). Expired, tampered, wrong-secret and malformed tokens are rejected. A refresh token is rejected too, because it is signed with the other secret.
+3. **Loads the user on every request** (`findAuthUser`, `server/src/services/findAuthUser.js`), by the token's `userId`, **without `passwordHash`**. A valid token for a user who no longer exists is rejected, so later code never gets a null user and never saves data for a deleted account.
+4. **Sets `req.user`** to that user and calls `next()`. Code after it reads `req.user` and never decodes the token again.
+
+**Every failure returns the same response:** **401 `UNAUTHENTICATED`**, `"Authentication Required"` (§7). The response never says which check failed, so a caller can't tell a bad signature from a deleted user. The client should refresh the access token once, then send the user to log in.
+
+**The database lookup** is by `_id`, which is indexed, so it is cheap. If it ever shows up in load tests, cache the user (Redis) and delete the cached copy whenever the user changes or is deleted. Until then, no cache.
+
+**`GET /api/users/me`** returns **200** `{ user }`, with the same `user` shape as signup and login (`{ id, username, email, createdAt, updatedAt }`). The user always comes from the token; a `userId` in the query or body is ignored (§8).
 
 ## 9. Naming & formats
 
