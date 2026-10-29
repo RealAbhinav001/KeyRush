@@ -5,6 +5,7 @@ import ApiError from "./utils/apiError.js";
 import { requestContextMiddleware, requestLogger } from "./middleware/requestContextMiddleware.js";
 import authRouter from "./routes/authRoutes.js";
 import cookieParser from "cookie-parser";
+import userRouter from "./routes/userRoutes.js";
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use("/api/auth", authRouter);
+app.use("/api/users", userRouter);
 
 app.use((req) => {
   throw new ApiError(404, `Route ${req.method} ${req.originalUrl} not found`, "NOT_FOUND");

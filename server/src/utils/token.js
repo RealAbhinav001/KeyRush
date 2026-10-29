@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
+import { unauthenticatedError } from "./errors.js";
 
 export const createAccessToken = (userId) => {
   const token = jwt.sign(
@@ -36,10 +37,7 @@ export const createRefreshToken = (userId) => {
 export const verifyAccessToken = (accessToken) => {
   const data = jwt.verify(accessToken, env.JWT_ACCESS_SECRET, (err, decode) => {
     if (err) {
-      const err = new Error("Your session has expired. Please log in again.");
-      err.code = "UNAUTHENTICATED";
-
-      throw err;
+      throw unauthenticatedError();
     } else {
       return decode;
     }
