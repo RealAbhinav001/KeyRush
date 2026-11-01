@@ -7,6 +7,7 @@ const STATUS_BY_CODE = {
   USERNAME_TAKEN: 409,
   INVALID_CREDENTIALS: 401,
   UNAUTHENTICATED: 401,
+  RATE_LIMITED: 429,
 };
 
 const errorMiddleware = (err, req, res, next) => {

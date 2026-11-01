@@ -289,6 +289,46 @@ No route repeats the check itself. `requireAuth` does four things, in order:
 
 **`GET /api/users/me`** returns **200** `{ user }`, with the same `user` shape as signup and login (`{ id, username, email, createdAt, updatedAt }`). The user always comes from the token; a `userId` in the query or body is ignored (§8).
 
+### 8.5 Rate limiting
+
+Login and signup are rate limited to stop password guessing and bulk account creation (`server/src/middleware/rateLimiterMiddleware.js`, `express-rate-limit`). Every other route is not limited yet.
+
+| Limiter     | Route          | Key                  | Counts                     | Limit         |
+| ----------- | -------------- | -------------------- | -------------------------- | ------------- |
+| Login IP    | `POST /login`  | client IP            | failed logins (`401`) only | 15 per 15 min |
+| Login email | `POST /login`  | the normalized email | failed logins (`401`) only | 30 per 15 min |
+| Signup      | `POST /signup` | client IP            | every request              | 20 per 15 min |
+
+**Why two keys on login.** Each key stops a different attack:
+
+- **IP** stops one machine trying many passwords on one account (brute force) or one password on many accounts (password spraying).
+- **Email** stops many machines each trying a few passwords on one account (distributed brute force), which an IP limit alone never catches.
+
+**Why these numbers**
+
+- **Only failures count on login.** A whole class logging in from one shared college IP must not use up the limit; only wrong passwords fill the counters. A failure is a `401` response, which on login is always `INVALID_CREDENTIALS`. **If login ever returns another `401`, check the error code instead of the status.**
+- **Email: 30 failures per 15 minutes.** A real user rarely fails more than a few times. A higher limit than the IP one makes it expensive for an attacker to lock a real user out on purpose, and the short window means a lockout lasts at most 15 minutes.
+- **Signup: 20 per 15 minutes, every request counts.** Signup has no password to guess; the risk is bulk account creation (each signup also costs an Argon2id hash). 20 covers a group signing up together on one network; the 21st waits.
+
+**Order on the route: validator → limiter → controller.**
+
+- The email key is read from `req.validated.body.email`, which is already trimmed and lowercased (§8.1), so `Rahul@X.com` and `rahul@x.com` share one counter. Tested: 31 failures across four spellings of one email gave 30 × `401`, then `429`.
+- A blocked request stops at the limiter, so it never reaches the login service or Argon2id. A request with an invalid body is rejected by the validator before the limiter and is not counted (it costs nothing).
+- On login, the IP limiter runs before the email limiter.
+
+**Response when blocked:** **429 `RATE_LIMITED`**, `"Too many attempts. Please try again later."`, in the standard error shape (§7). The limiter's handler passes the error to the central error middleware, so the shape and `requestId` match every other error. It also sends:
+
+- **`Retry-After`:** seconds until the client may try again.
+- **`RateLimit` / `RateLimit-Policy`** (IETF draft-8 format): the limit, the remaining attempts and the reset time, on every limited route. The old `X-RateLimit-*` headers are off.
+
+**IPv6:** one IPv6 user usually owns a whole block of addresses. With `ipv6Subnet: 56`, every address in the same `/56` block shares one counter, so an attacker can't get a fresh limit by changing the end of their address.
+
+**Counters are kept in memory.** They reset when the server restarts and are not shared between servers. That is fine with one server. **Move to a Redis store before running more than one server**, or every server gives an attacker its own full limit.
+
+**Behind a proxy or load balancer,** Express sees the proxy's IP for every request unless `trust proxy` is set, and then every user would share one counter. Set `trust proxy` to match the real deploy (for example one Nginx hop), never to `true` blindly: trusting every `X-Forwarded-For` header lets a client fake its IP and skip the IP limit.
+
+**Known risk:** an attacker can still lock one account out of login for up to 15 minutes by failing 30 times on its email. A CAPTCHA after a few failures, or a trusted-device cookie, would fix this later.
+
 ## 9. Naming & formats
 
 | Item              | Convention                  | Example                      |
@@ -346,5 +386,5 @@ These will be added as they're designed. Until then, raise them in the PR that f
 - **Response envelope:** bare resources vs `{ "data": ... }`, list metadata
 - **Idempotency:** `Idempotency-Key` for non-idempotent POSTs
 - **Versioning:** `/api/v1` or not
-- **Rate limiting:** limits per route group, `Retry-After` header
+- **Rate limiting for other routes:** login and signup are covered (§8.5); limits for refresh, races and other routes are still to decide
 - **Caching:** `Cache-Control` / `ETag` for public reads (leaderboard)
