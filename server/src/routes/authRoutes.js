@@ -1,5 +1,5 @@
 import express from "express";
-import { signUp, login } from "../validators/userValidator.js";
+import { signUpSchema,loginSchema } from "@keyrush/shared";
 import { validateRequest } from "../middleware/zodMiddleware.js";
 import {
   signUpController,
@@ -14,10 +14,10 @@ import {
 } from "../middleware/rateLimiterMiddleware.js";
 const authRouter = express.Router();
 
-authRouter.post("/signup", validateRequest({ body: signUp }), signUpIPMiddleware, signUpController);
+authRouter.post("/signup", validateRequest({ body: signUpSchema }), signUpIPMiddleware, signUpController);
 authRouter.post(
   "/login",
-  validateRequest({ body: login }),
+  validateRequest({ body: loginSchema }),
   loginIPMiddleware,
   loginEmailMiddleware,
   loginController,
