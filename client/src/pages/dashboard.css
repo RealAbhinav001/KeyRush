@@ -50,7 +50,7 @@
 .kr3-db-scene {
   position: relative;
   flex: 1;
-  min-height: 40rem;
+  min-height: 30rem;
   overflow: hidden;
   isolation: isolate;
   background:
@@ -141,14 +141,16 @@
 
 /* ---------- The track ---------- */
 .kr3-db-track {
-  --kerb: 1.4rem;
+  /* one unit that follows the window height, so the whole track fits */
+  --u: clamp(9px, 1.6vh, 16px);
+  --kerb: calc(1.4 * var(--u));
   position: absolute;
   left: 50%;
-  bottom: -6rem;
+  bottom: calc(-1 * var(--u));
   z-index: 1;
-  width: min(58rem, 112%);
-  height: 70rem;
-  padding: 0 calc(var(--kerb) + 2rem);
+  width: min(calc(58 * var(--u)), 112%);
+  height: calc(70 * var(--u));
+  padding: 0 calc(var(--kerb) + calc(2 * var(--u)));
   background:
     repeating-linear-gradient(180deg, transparent 0 58px, rgba(238, 241, 247, 0.035) 58px 60px),
     linear-gradient(180deg, #0d1019 0%, var(--asphalt) 55%, #171c2e 100%);
@@ -176,8 +178,12 @@
   top: 0;
   bottom: 0;
   width: var(--kerb);
-  background: repeating-linear-gradient(180deg, var(--red) 0 3rem, var(--text) 3rem 6rem);
-  background-size: 100% 6rem;
+  background: repeating-linear-gradient(
+    180deg,
+    var(--red) 0 calc(3 * var(--u)),
+    var(--text) calc(3 * var(--u)) calc(6 * var(--u))
+  );
+  background-size: 100% calc(6 * var(--u));
   animation: kr3-db-kerb 1.1s linear infinite;
 }
 
@@ -191,7 +197,7 @@
 
 @keyframes kr3-db-kerb {
   to {
-    background-position: 0 6rem;
+    background-position: 0 calc(6 * var(--u));
   }
 }
 
@@ -199,13 +205,13 @@
    scaleY counters the tilt so it reads like real track lettering. */
 .kr3-db-paint {
   position: absolute;
-  bottom: 33.5rem;
+  bottom: calc(33.5 * var(--u));
   left: 0;
   right: 0;
   margin: 0;
   color: rgba(238, 241, 247, 0.92);
   font-family: var(--display);
-  font-size: clamp(4.5rem, 11vw, 8.5rem);
+  font-size: min(calc(8.5 * var(--u)), 11vw);
   font-style: italic;
   font-weight: 700;
   line-height: 1;
@@ -217,12 +223,12 @@
 
 .kr3-db-startline {
   position: absolute;
-  bottom: 27.8rem;
-  left: calc(var(--kerb) + 0.5rem);
-  right: calc(var(--kerb) + 0.5rem);
-  height: 1.2rem;
+  bottom: calc(27.8 * var(--u));
+  left: calc(var(--kerb) + calc(0.5 * var(--u)));
+  right: calc(var(--kerb) + calc(0.5 * var(--u)));
+  height: calc(1.2 * var(--u));
   background: conic-gradient(var(--text) 25%, #05060a 0 50%, var(--text) 0 75%, #05060a 0) 0 0 /
-    1.2rem 1.2rem;
+    calc(1.2 * var(--u)) calc(1.2 * var(--u));
   opacity: 0.85;
 }
 
@@ -230,29 +236,29 @@
 .kr3-db-slots::before {
   content: "";
   position: absolute;
-  top: -1rem;
+  top: calc(-1 * var(--u));
   bottom: 0;
   left: 50%;
   width: 6px;
   margin-left: -3px;
   background: repeating-linear-gradient(
     180deg,
-    rgba(238, 241, 247, 0.55) 0 3rem,
-    transparent 3rem 6rem
+    rgba(238, 241, 247, 0.55) 0 calc(3 * var(--u)),
+    transparent calc(3 * var(--u)) calc(6 * var(--u))
   );
-  background-size: 100% 6rem;
+  background-size: 100% calc(6 * var(--u));
   animation: kr3-db-kerb 0.55s linear infinite;
 }
 
 /* ---------- Grid slots on the track ---------- */
 .kr3-db-slots {
   position: absolute;
-  bottom: 1rem;
-  left: calc(var(--kerb) + 3rem);
-  right: calc(var(--kerb) + 3rem);
+  bottom: calc(5.5 * var(--u));
+  left: calc(var(--kerb) + calc(3 * var(--u)));
+  right: calc(var(--kerb) + calc(3 * var(--u)));
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0 6rem;
+  gap: 0 calc(6 * var(--u));
   margin: 0;
   padding: 0;
   list-style: none;
@@ -262,16 +268,16 @@
   position: relative;
   display: grid;
   align-content: end;
-  min-height: 9rem;
-  margin-bottom: 2rem;
-  padding: 0 1.2rem 1.2rem;
+  min-height: calc(9 * var(--u));
+  margin-bottom: calc(2 * var(--u));
+  padding: 0 calc(1.2 * var(--u)) calc(1.2 * var(--u));
   border: 3px solid rgba(238, 241, 247, 0.6);
   border-top: 0;
   border-radius: 0 0 5px 5px;
 }
 
 .kr3-db-slot:nth-child(even) {
-  transform: translateY(5rem);
+  transform: translateY(calc(5 * var(--u)));
 }
 
 .kr3-db-slot:not(.is-you) {
@@ -294,11 +300,11 @@
 
 .kr3-db-pos {
   position: absolute;
-  top: 0.6rem;
-  left: 1.2rem;
+  top: calc(0.6 * var(--u));
+  left: calc(1.2 * var(--u));
   color: var(--muted);
   font-family: var(--display);
-  font-size: 2rem;
+  font-size: calc(2 * var(--u));
   font-style: italic;
   font-weight: 700;
 }
@@ -314,7 +320,7 @@
 .kr3-db-open {
   color: rgba(238, 241, 247, 0.3);
   font-family: var(--display);
-  font-size: 2.2rem;
+  font-size: calc(2.2 * var(--u));
   font-style: italic;
   font-weight: 600;
 }
@@ -349,7 +355,7 @@
     transform: translateY(0);
   }
   35% {
-    transform: translateY(-2rem);
+    transform: translateY(calc(-2 * var(--u)));
   }
   100% {
     transform: translateY(0);
@@ -364,7 +370,7 @@
   background: var(--text);
   color: var(--ink);
   font-family: var(--display);
-  font-size: 3rem;
+  font-size: calc(3 * var(--u));
   font-style: italic;
   font-weight: 700;
   line-height: 1.05;
@@ -372,7 +378,7 @@
   white-space: nowrap;
   border-radius: 6px;
   transform: skewX(-12deg);
-  box-shadow: 0.5rem 0.5rem 0 var(--purple);
+  box-shadow: calc(0.5 * var(--u)) calc(0.5 * var(--u)) 0 var(--purple);
 }
 
 /* ---------- Broadcast timing bar ---------- */
@@ -504,36 +510,37 @@
   }
 
   .kr3-db-track {
-    bottom: 9.5rem;
-    height: 50rem;
+    --u: 16px; /* phone layout is tuned at a fixed size; the scene scrolls if short */
+    bottom: calc(11.5 * var(--u));
+    height: calc(50 * var(--u));
     width: 150%;
     transform: translateX(-50%) rotateX(52deg);
   }
 
   .kr3-db-paint {
-    bottom: 27rem;
-    font-size: 3.9rem;
+    bottom: calc(25.5 * var(--u));
+    font-size: calc(3.9 * var(--u));
   }
 
   .kr3-db-startline {
-    bottom: 22.5rem;
+    bottom: calc(22.5 * var(--u));
   }
 
   .kr3-db-slots {
-    bottom: 1.5rem;
-    gap: 0 4rem;
+    bottom: calc(1.5 * var(--u));
+    gap: 0 calc(4 * var(--u));
   }
 
   .kr3-db-slot {
-    min-height: 8.5rem;
+    min-height: calc(8.5 * var(--u));
   }
 
   .kr3-db-plate {
-    font-size: 2.3rem;
+    font-size: calc(2.3 * var(--u));
   }
 
   .kr3-db-slot:nth-child(even) {
-    transform: translateY(3.5rem);
+    transform: translateY(calc(3.5 * var(--u)));
   }
 
   .kr3-db-status {
