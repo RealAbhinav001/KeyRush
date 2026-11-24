@@ -1,96 +1,85 @@
 import { useState } from "react";
-import {signUpSchema} from "@keyrush/shared"
+import { signUpSchema } from "@keyrush/shared";
 import { signUp } from "../api/auth";
-import { useDispatch } from 'react-redux'
+import { useDispatch } from "react-redux";
 import { signedIn } from "../features/auth/authSlice";
-import { Link, useNavigate } from 'react-router'
+import { Link, useNavigate } from "react-router";
 import "./landing.css";
 import "./signup.css";
 
-
 const userFieldErrors = {
-    username:"",
-    email:"",
-    password:""
-  }
-
+  username: "",
+  email: "",
+  password: "",
+};
 
 const SignUp = () => {
-  const [values,setValues] = useState({
-    username:"",
-    email:"",
-    password:""
-  })
+  const [values, setValues] = useState({
+    username: "",
+    email: "",
+    password: "",
+  });
 
-  const dispatch = useDispatch()
-  const navigate = useNavigate()
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-  const [formError,setFormError] = useState(null)
+  const [formError, setFormError] = useState(null);
 
-  const [fieldErrors,setFieldErrors] = useState(userFieldErrors)
+  const [fieldErrors, setFieldErrors] = useState(userFieldErrors);
 
-  const [isSubmitting,setIsSubmitting] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleFormChange = (e)=>{
-    const {name,value} = e.target;
+  const handleFormChange = (e) => {
+    const { name, value } = e.target;
 
-    setValues(prev =>({...prev,[name]:value}))
-  }
+    setValues((prev) => ({ ...prev, [name]: value }));
+  };
 
-  const handleSubmit = async (e)=>{
-    e.preventDefault()
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-    if(isSubmitting !== false)return
+    if (isSubmitting !== false) return;
 
-    setFormError(null)
-    setFieldErrors(userFieldErrors)
+    setFormError(null);
+    setFieldErrors(userFieldErrors);
 
-    const result = signUpSchema.safeParse(values)
-    if(result.success === false){
+    const result = signUpSchema.safeParse(values);
+    if (result.success === false) {
       const newObject = {};
 
-      for(const item of result.error.issues){
-        const stringItem = item.path.join(".")
+      for (const item of result.error.issues) {
+        const stringItem = item.path.join(".");
 
-        if(stringItem in newObject){
-          newObject[stringItem] += ". " + item.message
+        if (stringItem in newObject) {
+          newObject[stringItem] += ". " + item.message;
+        } else {
+          newObject[stringItem] = item.message;
         }
-        else{
-          newObject[stringItem] = item.message
-        }
-
-        
       }
 
-      setFieldErrors(newObject)
+      setFieldErrors(newObject);
 
-      return
+      return;
     }
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
 
-    try{
-      const user = await signUp(result.data)
+    try {
+      const user = await signUp(result.data);
 
-      dispatch(signedIn(user))
+      dispatch(signedIn(user));
 
-      navigate("/dashboard")
-
-    }
-
-    catch(error){
-      if(Object.keys(error?.details || {}).length>0){
-        setFieldErrors(error.details)
-      }
-      else{
-        setFormError(error.message)
+      navigate("/dashboard");
+    } catch (error) {
+      if (Object.keys(error?.details || {}).length > 0) {
+        setFieldErrors(error.details);
+      } else {
+        setFormError(error.message);
       }
 
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-
-
-  }
+  };
 
   // Presentation only: preview the name the way the server will store it.
   const plateName = values.username.trim().toLowerCase();
@@ -105,7 +94,10 @@ const SignUp = () => {
 
         <div className="kr3-su-plate-wrap" aria-hidden="true">
           <span key={plateName.length} className="kr3-su-streak" />
-          <div className={`kr3-su-plate${plateName ? "" : " is-empty"}`} style={{ "--len": Math.max(plateName.length, 6) }}>
+          <div
+            className={`kr3-su-plate${plateName ? "" : " is-empty"}`}
+            style={{ "--len": Math.max(plateName.length, 6) }}
+          >
             <span className="kr3-su-plate-name">{plateName || "your_name"}</span>
           </div>
           <p className="kr3-su-plate-meta">
@@ -137,7 +129,10 @@ const SignUp = () => {
                 aria-invalid={Boolean(fieldErrors.username)}
                 aria-describedby="su-username-msg"
               />
-              <p id="su-username-msg" className={fieldErrors.username ? "kr3-su-error" : "kr3-su-hint"}>
+              <p
+                id="su-username-msg"
+                className={fieldErrors.username ? "kr3-su-error" : "kr3-su-hint"}
+              >
                 {fieldErrors.username || "3 to 20 letters, numbers or underscores."}
               </p>
             </div>
@@ -173,7 +168,10 @@ const SignUp = () => {
                 aria-invalid={Boolean(fieldErrors.password)}
                 aria-describedby="su-password-msg"
               />
-              <p id="su-password-msg" className={fieldErrors.password ? "kr3-su-error" : "kr3-su-hint"}>
+              <p
+                id="su-password-msg"
+                className={fieldErrors.password ? "kr3-su-error" : "kr3-su-hint"}
+              >
                 {fieldErrors.password || "At least 8 characters."}
               </p>
             </div>
@@ -184,7 +182,12 @@ const SignUp = () => {
               </p>
             )}
 
-            <button className="kr3-btn kr3-su-submit" type="submit" disabled={isSubmitting} aria-busy={isSubmitting}>
+            <button
+              className="kr3-btn kr3-su-submit"
+              type="submit"
+              disabled={isSubmitting}
+              aria-busy={isSubmitting}
+            >
               {isSubmitting ? "Creating account…" : "Create account"}
             </button>
           </form>

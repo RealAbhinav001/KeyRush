@@ -11,15 +11,16 @@ export const errorInterceptor = (axiosError) => {
 
   if (axios.isCancel(axiosError)) {
     return Promise.reject(axiosError);
-
-  
-  } 
-  else if((axiosError?.response?.status === 502 ||axiosError?.response?.status === 503 || axiosError?.response?.status === 504) && !axiosError.response.data?.error ){
-    normalizedError.status = axiosError.response.status
-    normalizedError.code = "SERVER_UNREACHABLE"
-    normalizedError.message = "Can't Reach the Server. Try Again"
-  }
-  else if (axiosError.response) {
+  } else if (
+    (axiosError?.response?.status === 502 ||
+      axiosError?.response?.status === 503 ||
+      axiosError?.response?.status === 504) &&
+    !axiosError.response.data?.error
+  ) {
+    normalizedError.status = axiosError.response.status;
+    normalizedError.code = "SERVER_UNREACHABLE";
+    normalizedError.message = "Can't Reach the Server. Try Again";
+  } else if (axiosError.response) {
     const { status, data } = axiosError.response;
     normalizedError.status = status;
     normalizedError.code = data?.error?.code || `HTTP_${status}`;
@@ -44,8 +45,6 @@ export const errorInterceptor = (axiosError) => {
       normalizedError.message = "Can't Reach the Server. Try Again";
     }
   }
-
-
 
   return Promise.reject(normalizedError);
 };
