@@ -1,0 +1,195 @@
+/* Shared layout for the signup and login pages.
+   Left: a showpiece panel (each page brings its own). Right: the form.
+   Reuses the .kr3 tokens, logo and button from landing.css. */
+
+.kr3-auth {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* ---------- Left: showpiece panel ---------- */
+.kr3-auth-side {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem calc(var(--gutter) + 1.5rem) 2rem var(--gutter);
+  background:
+    radial-gradient(70% 55% at 30% 55%, rgba(139, 92, 246, 0.16), transparent 70%),
+    repeating-linear-gradient(-12deg, transparent 0 46px, rgba(238, 241, 247, 0.025) 46px 48px),
+    var(--asphalt);
+  overflow: hidden;
+  isolation: isolate;
+  container-type: inline-size;
+}
+
+/* The kerb between the two halves */
+.kr3-auth-kerb {
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: 1rem;
+  background: repeating-linear-gradient(180deg, var(--red) 0 2.25rem, var(--text) 2.25rem 4.5rem);
+  box-shadow: -0.35rem 0 0 rgba(0, 0, 0, 0.35);
+}
+
+/* ---------- Right: the form ---------- */
+.kr3-auth-main {
+  display: grid;
+  place-items: center;
+  padding: 3rem var(--gutter);
+}
+
+.kr3-auth-panel {
+  width: min(100%, 26rem);
+}
+
+.kr3-auth-panel h1 {
+  margin: 0;
+  font-family: var(--display);
+  font-size: clamp(2.6rem, 5vw, 3.4rem);
+  font-style: italic;
+  font-weight: 700;
+  line-height: 0.95;
+  letter-spacing: -0.015em;
+}
+
+.kr3-auth-lede {
+  margin: 0.75rem 0 2.25rem;
+  color: var(--muted);
+}
+
+.kr3-auth-form {
+  display: grid;
+  gap: 1.35rem;
+}
+
+.kr3-auth-field {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.kr3-auth-field label {
+  font-weight: 500;
+  font-size: 0.98rem;
+}
+
+.kr3-auth-field input {
+  width: 100%;
+  min-height: 3.1rem;
+  padding: 0 1rem;
+  background: var(--asphalt);
+  color: var(--text);
+  font: inherit;
+  border: 1px solid var(--line);
+  border-bottom: 2px solid #3a4260;
+  border-radius: 6px;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease;
+}
+
+.kr3-auth-field input:hover {
+  border-color: #3a4260;
+}
+
+.kr3-auth-field input:focus {
+  background: #171b2c;
+  border-color: var(--purple);
+  outline: none;
+}
+
+.kr3-auth-field input:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: 2px;
+}
+
+.kr3-auth-field input[aria-invalid="true"] {
+  border-color: var(--red);
+}
+
+.kr3-auth-hint,
+.kr3-auth-error {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.kr3-auth-hint {
+  color: var(--muted);
+}
+
+.kr3-auth-error {
+  color: #ff6a60;
+}
+
+.kr3-auth-alert {
+  margin: 0;
+  padding: 0.8rem 1rem;
+  background: rgba(255, 59, 47, 0.08);
+  border-left: 3px solid var(--red);
+  border-radius: 0 6px 6px 0;
+  color: var(--text);
+}
+
+.kr3-auth-submit {
+  width: 100%;
+  margin-top: 0.5rem;
+  cursor: pointer;
+}
+
+.kr3-auth-submit:disabled {
+  cursor: progress;
+  background: var(--muted);
+  border-color: var(--muted);
+}
+
+.kr3-auth-submit:disabled:hover {
+  background: var(--muted);
+  border-color: var(--muted);
+  color: var(--ink) !important;
+}
+
+/* "Already have an account? Log in" */
+.kr3-auth-switch {
+  margin: 1.75rem 0 0;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+}
+
+.kr3-auth-switch a {
+  color: var(--text);
+  font-weight: 600;
+  text-decoration-color: var(--purple);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.25em;
+}
+
+.kr3-auth-switch a:hover {
+  color: var(--purple);
+}
+
+/* ---------- Small screens: the showpiece becomes a top band ---------- */
+@media (max-width: 860px) {
+  .kr3-auth {
+    grid-template-columns: 1fr;
+  }
+
+  .kr3-auth-side {
+    padding: 1.25rem var(--gutter) 2.25rem;
+  }
+
+  .kr3-auth-kerb {
+    inset: auto 0 0 0;
+    width: auto;
+    height: 0.75rem;
+    background: repeating-linear-gradient(90deg, var(--red) 0 2.25rem, var(--text) 2.25rem 4.5rem);
+    box-shadow: none;
+  }
+
+  .kr3-auth-main {
+    place-items: start center;
+    padding-top: 2.5rem;
+  }
+}

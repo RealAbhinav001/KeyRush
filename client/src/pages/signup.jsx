@@ -5,6 +5,7 @@ import { useDispatch } from "react-redux";
 import { signedIn } from "../features/auth/authSlice";
 import { Link, useNavigate } from "react-router";
 import "./landing.css";
+import "./auth.css";
 import "./signup.css";
 
 const userFieldErrors = {
@@ -85,8 +86,8 @@ const SignUp = () => {
   const plateName = values.username.trim().toLowerCase();
 
   return (
-    <div className="kr3 kr3-su">
-      <aside className="kr3-su-grid">
+    <div className="kr3 kr3-auth">
+      <aside className="kr3-auth-side">
         <Link className="kr3-logo" to="/" aria-label="Keyrush home">
           <span className="kr3-logo-mark" aria-hidden="true" />
           Keyrush
@@ -105,16 +106,16 @@ const SignUp = () => {
           </p>
         </div>
 
-        <span className="kr3-su-kerb" aria-hidden="true" />
+        <span className="kr3-auth-kerb" aria-hidden="true" />
       </aside>
 
-      <main className="kr3-su-main">
-        <div className="kr3-su-panel">
+      <main className="kr3-auth-main">
+        <div className="kr3-auth-panel">
           <h1>Create your account</h1>
-          <p className="kr3-su-lede">Pick a racing name and you're on the grid in seconds.</p>
+          <p className="kr3-auth-lede">Pick a racing name and you're on the grid in seconds.</p>
 
-          <form className="kr3-su-form" noValidate onSubmit={handleSubmit}>
-            <div className="kr3-su-field">
+          <form className="kr3-auth-form" noValidate onSubmit={handleSubmit}>
+            <div className="kr3-auth-field">
               <label htmlFor="su-username">Username</label>
               <input
                 id="su-username"
@@ -131,13 +132,13 @@ const SignUp = () => {
               />
               <p
                 id="su-username-msg"
-                className={fieldErrors.username ? "kr3-su-error" : "kr3-su-hint"}
+                className={fieldErrors.username ? "kr3-auth-error" : "kr3-auth-hint"}
               >
                 {fieldErrors.username || "3 to 20 letters, numbers or underscores."}
               </p>
             </div>
 
-            <div className="kr3-su-field">
+            <div className="kr3-auth-field">
               <label htmlFor="su-email">Email</label>
               <input
                 id="su-email"
@@ -150,13 +151,13 @@ const SignUp = () => {
                 aria-describedby={fieldErrors.email ? "su-email-msg" : undefined}
               />
               {fieldErrors.email && (
-                <p id="su-email-msg" className="kr3-su-error">
+                <p id="su-email-msg" className="kr3-auth-error">
                   {fieldErrors.email}
                 </p>
               )}
             </div>
 
-            <div className="kr3-su-field">
+            <div className="kr3-auth-field">
               <label htmlFor="su-password">Password</label>
               <input
                 id="su-password"
@@ -170,20 +171,20 @@ const SignUp = () => {
               />
               <p
                 id="su-password-msg"
-                className={fieldErrors.password ? "kr3-su-error" : "kr3-su-hint"}
+                className={fieldErrors.password ? "kr3-auth-error" : "kr3-auth-hint"}
               >
                 {fieldErrors.password || "At least 8 characters."}
               </p>
             </div>
 
             {formError && (
-              <p className="kr3-su-alert" role="alert">
+              <p className="kr3-auth-alert" role="alert">
                 {formError}
               </p>
             )}
 
             <button
-              className="kr3-btn kr3-su-submit"
+              className="kr3-btn kr3-auth-submit"
               type="submit"
               disabled={isSubmitting}
               aria-busy={isSubmitting}
@@ -191,6 +192,10 @@ const SignUp = () => {
               {isSubmitting ? "Creating account…" : "Create account"}
             </button>
           </form>
+
+          <p className="kr3-auth-switch">
+            Already have an account? <Link to="/login">Log in</Link>
+          </p>
         </div>
       </main>
     </div>

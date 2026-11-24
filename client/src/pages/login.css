@@ -1,0 +1,94 @@
+/* Login showpiece: start lights that arm while the login request is in flight.
+   On success the dashboard runs "lights out". Layout and form live in auth.css. */
+
+.kr3-li-start {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 1.75rem;
+  flex: 1;
+  padding: 3rem 0;
+  text-align: center;
+}
+
+.kr3-li-gantry {
+  display: flex;
+  gap: clamp(0.6rem, 2.6cqi, 1.4rem);
+  padding: clamp(0.9rem, 3cqi, 1.4rem);
+  background: #05060a;
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 1.5rem 3rem rgba(0, 0, 0, 0.5);
+}
+
+.kr3-li-light {
+  display: grid;
+  gap: clamp(0.4rem, 1.6cqi, 0.75rem);
+  padding: clamp(0.45rem, 1.8cqi, 0.8rem);
+  background: #10131c;
+  border-radius: 10px;
+}
+
+.kr3-li-light i {
+  display: block;
+  width: clamp(2rem, 9cqi, 3.6rem);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #2a1514;
+  box-shadow: inset 0 -4px 10px rgba(0, 0, 0, 0.55);
+  transition:
+    background 160ms ease,
+    box-shadow 160ms ease;
+}
+
+/* Idle: a slow pulse on the first light, like a car waiting at the line. */
+.kr3-li-light:first-child i {
+  animation: kr3-li-ready 2.4s ease-in-out infinite;
+}
+
+@keyframes kr3-li-ready {
+  50% {
+    background: #4a1b17;
+  }
+}
+
+/* Arming: lights come on left to right while the request is in flight. */
+.kr3-li-start.is-arming .kr3-li-light i {
+  animation: kr3-li-on 0.2s ease-out calc((var(--n) - 1) * 0.35s) forwards;
+}
+
+@keyframes kr3-li-on {
+  to {
+    background: var(--red);
+    box-shadow:
+      0 0 1.4rem rgba(255, 59, 47, 0.85),
+      inset 0 -4px 10px rgba(0, 0, 0, 0.25);
+  }
+}
+
+.kr3-li-caption {
+  margin: 0;
+  color: var(--muted);
+  font-size: 1.05rem;
+}
+
+@media (max-width: 860px) {
+  .kr3-li-start {
+    padding: 2rem 0 0.5rem;
+  }
+
+  .kr3-li-light i {
+    width: clamp(1.6rem, 9cqi, 2.6rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kr3-li-light:first-child i,
+  .kr3-li-start.is-arming .kr3-li-light i {
+    animation: none;
+  }
+
+  .kr3-li-start.is-arming .kr3-li-light i {
+    background: var(--red);
+  }
+}
