@@ -5,6 +5,9 @@ import { SplitText } from "gsap/SplitText";
 import { Flip } from "gsap/Flip";
 import { useGSAP } from "@gsap/react";
 import Lenis from "lenis";
+import axios from "axios";
+import { Link } from "react-router";
+import { getHealth } from "../api/health";
 import "./landing.css";
 
 gsap.registerPlugin(ScrollTrigger, SplitText, Flip, useGSAP);
@@ -12,6 +15,8 @@ gsap.registerPlugin(ScrollTrigger, SplitText, Flip, useGSAP);
 const HeroScene = lazy(() => import("./landing/HeroScene.jsx"));
 
 const REDUCED = "(prefers-reduced-motion: reduce)";
+
+const FALLBACK_ERROR = "Can't reach the server. Try again.";
 
 const drivers = {
   rival: { name: "rival_dev", tone: "fastest" },
@@ -78,7 +83,7 @@ const supportsWebGL = () => {
   }
 };
 
-const Landing = ({ serverStatus }) => {
+const Landing = () => {
   const root = useRef(null);
   const heroRef = useRef(null);
   const towerRef = useRef(null);
@@ -88,8 +93,31 @@ const Landing = ({ serverStatus }) => {
   const [webgl] = useState(supportsWebGL);
   const [reduced] = useState(() => window.matchMedia(REDUCED).matches);
   const [heroInView, setHeroInView] = useState(true);
+  // One state, three possible shapes — impossible combinations can't exist.
+  const [health, setHealth] = useState({ status: "loading" });
 
   useSmoothScroll();
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const loadHealth = async () => {
+      try {
+        const data = await getHealth({ signal: controller.signal });
+        setHealth({ status: "ok", data });
+      } catch (error) {
+        if (axios.isCancel(error)) return; // we cancelled it ourselves
+        setHealth({
+          status: "error",
+          message: error.response?.data?.error ?? FALLBACK_ERROR,
+        });
+      }
+    };
+
+    loadHealth();
+
+    return () => controller.abort();
+  }, []);
 
   useGSAP(
     () => {
@@ -241,10 +269,10 @@ const Landing = ({ serverStatus }) => {
       </a>
 
       <header className="kr3-nav">
-        <a className="kr3-logo" href="/" aria-label="Keyrush home">
+        <Link className="kr3-logo" to="/" aria-label="Keyrush home">
           <span className="kr3-logo-mark" aria-hidden="true" />
           Keyrush
-        </a>
+        </Link>
         <nav aria-label="Main">
           <ul>
             <li>
@@ -261,9 +289,9 @@ const Landing = ({ serverStatus }) => {
             </li>
           </ul>
         </nav>
-        <a className="kr3-btn kr3-btn-small" href="/signup">
+        <Link className="kr3-btn kr3-btn-small" to="/signup">
           Create account
-        </a>
+        </Link>
       </header>
 
       <main id="main">
@@ -285,9 +313,9 @@ const Landing = ({ serverStatus }) => {
               car. Every mistake costs you time.
             </p>
             <div className="kr3-hero-actions kr3-hero-fade">
-              <a className="kr3-btn" href="/signup">
+              <Link className="kr3-btn" to="/signup">
                 Start racing
-              </a>
+              </Link>
               <a className="kr3-btn kr3-btn-ghost" href="#lights">
                 See a race start
               </a>
@@ -396,20 +424,20 @@ const Landing = ({ serverStatus }) => {
           <h2 id="cta-title" className="kr3-reveal">
             Your car is on the grid.
           </h2>
-          <a className="kr3-btn" href="/signup">
+          <Link className="kr3-btn" to="/signup">
             Create account
-          </a>
+          </Link>
         </section>
       </main>
 
       <footer className="kr3-foot">
         <span>Keyrush, built in public.</span>
         <a href="https://github.com/RealAbhinav001/KeyRush">Source on GitHub</a>
-        <span className={`kr3-status kr3-status-${serverStatus}`}>
+        <span className={`kr3-status kr3-status-${health.status}`}>
           <span className="kr3-status-dot" aria-hidden="true" />
-          {serverStatus === "ok" && "Server online"}
-          {serverStatus === "error" && "Server offline"}
-          {serverStatus === "loading" && "Checking server"}
+          {health.status === "ok" && "Server online"}
+          {health.status === "error" && "Server offline"}
+          {health.status === "loading" && "Checking server"}
         </span>
       </footer>
     </div>

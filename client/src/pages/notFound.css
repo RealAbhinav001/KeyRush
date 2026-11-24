@@ -1,0 +1,86 @@
+/* Not-found page. Reuses the .kr3 tokens and buttons from landing.css. */
+.kr3-404 {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.kr3-404-bar {
+  padding: 1rem var(--gutter);
+}
+
+.kr3-404-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1rem;
+  max-width: 44rem;
+  padding: 2rem var(--gutter) 6rem;
+}
+
+.kr3-404-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+  color: var(--yellow);
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.kr3-404-flag span {
+  width: 1.6rem;
+  height: 1rem;
+  background: var(--yellow);
+  border-radius: 2px;
+  transform: skewX(-12deg);
+}
+
+.kr3-404-main h1 {
+  margin: 0;
+  font-family: var(--display);
+  font-size: clamp(3.2rem, 11vw, 6.5rem);
+  font-style: italic;
+  font-weight: 700;
+  line-height: 0.95;
+}
+
+.kr3-404-lede {
+  margin: 0;
+  color: var(--muted);
+  font-size: 1.15rem;
+}
+
+.kr3-404-path {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.5rem 0 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--asphalt);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 0.95rem;
+}
+
+.kr3-404-code {
+  color: var(--red);
+  font-weight: 700;
+}
+
+.kr3-404-path code {
+  overflow-wrap: anywhere;
+  color: var(--text);
+}
+
+.kr3-404-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
