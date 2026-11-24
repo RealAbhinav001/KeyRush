@@ -1,5 +1,6 @@
 import axios from "axios";
 import { errorInterceptor } from "./apiError";
+import { getAccessToken } from "./token";
 
 const instance = axios.create({
   baseURL: "/api",
@@ -10,5 +11,15 @@ instance.interceptors.response.use(
 
   (error) => errorInterceptor(error),
 );
+
+instance.interceptors.request.use((config) => {
+  const accessToken = getAccessToken();
+
+  if (accessToken) {
+    config.headers.Authorization = `Bearer ${accessToken}`;
+  }
+
+  return config;
+});
 
 export default instance;
