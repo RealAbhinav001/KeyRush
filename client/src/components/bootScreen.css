@@ -1,0 +1,75 @@
+/* Boot screen: shown while the session is being checked.
+   First 300 ms: only the dark background (no flash). After that: a looping start sequence. */
+
+.kr3-boot {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.kr3-boot-inner {
+  display: grid;
+  justify-items: center;
+  gap: 1.25rem;
+  animation: kr3-boot-in 400ms ease both;
+}
+
+@keyframes kr3-boot-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+}
+
+.kr3-boot-gantry {
+  display: flex;
+  gap: 0.6rem;
+  padding: 0.7rem 0.85rem;
+  background: #05060a;
+  border: 2px solid var(--line);
+  border-radius: 10px;
+}
+
+/* Lights come on one by one, then all go out, and repeat. */
+.kr3-boot-light {
+  width: 1.4rem;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #2a1514;
+  box-shadow: inset 0 -3px 6px rgba(0, 0, 0, 0.55);
+  animation: kr3-boot-seq 2.4s linear infinite;
+  animation-delay: calc((var(--n) - 1) * 0.3s);
+}
+
+@keyframes kr3-boot-seq {
+  0% {
+    background: #2a1514;
+    box-shadow: inset 0 -3px 6px rgba(0, 0, 0, 0.55);
+  }
+  6%,
+  55% {
+    background: var(--red);
+    box-shadow:
+      0 0 0.8rem rgba(255, 59, 47, 0.85),
+      inset 0 -3px 6px rgba(0, 0, 0, 0.25);
+  }
+  62%,
+  100% {
+    background: #2a1514;
+    box-shadow: inset 0 -3px 6px rgba(0, 0, 0, 0.55);
+  }
+}
+
+.kr3-boot-inner p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kr3-boot-inner,
+  .kr3-boot-light {
+    animation: none;
+  }
+}

@@ -4,7 +4,7 @@ import { getAccessToken } from "./token";
 
 const instance = axios.create({
   baseURL: "/api",
-  timeout: 15000
+  timeout: 15000,
 });
 
 instance.interceptors.response.use(

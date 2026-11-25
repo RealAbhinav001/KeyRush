@@ -2,10 +2,13 @@ import AppRoutes from "./routes/appRoute.jsx";
 import { useEffect } from "react";
 import { refreshToken, getMe } from "./api/auth.js";
 import { signedIn, signedOut } from "./features/auth/authSlice.js";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import BootScreen from "./components/BootScreen.jsx";
 
 const App = () => {
   const dispatch = useDispatch();
+
+  const status = useSelector((state) => state.auth.status);
 
   useEffect(() => {
     const restoreSession = async () => {
@@ -22,7 +25,7 @@ const App = () => {
     restoreSession();
   }, [dispatch]);
 
-  return <AppRoutes />;
+  return status === "checking" ? <BootScreen /> : <AppRoutes />;
 };
 
 export default App;
